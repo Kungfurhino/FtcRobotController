@@ -9,6 +9,7 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 import androidx.annotation.RequiresApi;
 
+//Simple op mode to test your recorded movements
 @TeleOp
 public class Playback extends LinearOpMode {
 
@@ -16,6 +17,8 @@ public class Playback extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+
+        //Make sure to change to file name to the path you want to test
         JoystickRecorder recorder = new JoystickRecorder("SlowBack" + ".txt", telemetry);
 
         waitForStart();
