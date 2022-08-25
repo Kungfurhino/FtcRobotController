@@ -21,6 +21,7 @@ public class Configuration {
     public DcMotorEx motorFL;
     public DcMotorEx motorBR;
     public DcMotorEx motorBL;
+    public DcMotor arm;
 
     HardwareMap hwMap           =  null;
 

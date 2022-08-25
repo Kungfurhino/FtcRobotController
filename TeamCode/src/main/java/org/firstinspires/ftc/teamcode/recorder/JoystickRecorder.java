@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import org.firstinspires.ftc.robotcore.internal.ui.UILocation;
-import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import ii.SampleMecanumDrive;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -36,10 +36,8 @@ public class JoystickRecorder {
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void writeToFile(String text) {
         File file = new File(AppUtil.FIRST_FOLDER, filename);
-        try {
-            try (FileOutputStream outputStream = new FileOutputStream(file)) {
-                outputStream.write(text.getBytes());
-            }
+        try (FileOutputStream outputStream = new FileOutputStream(file)) {
+            outputStream.write(text.getBytes());
         } catch (IOException e) {
             throw new RuntimeException("Failed to write to file:" + filename, e);
         }
@@ -154,8 +152,8 @@ public class JoystickRecorder {
                     return;
                 }
             }
-        }else{
-            for(int i = 0; i < samples.size(); i++) {
+        } else {
+            for (int i = 0; i < samples.size(); i++) {
                 double throttle = samples.get(i).get(2);
                 double direction = samples.get(i).get(0);
                 double strafe = samples.get(i).get(1);
