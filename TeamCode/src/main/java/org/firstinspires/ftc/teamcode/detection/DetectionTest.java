@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.detection;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -22,6 +23,7 @@ public class DetectionTest extends LinearOpMode {
     OpenCvInternalCamera phoneCam;
     OpenCvWebcam webcam;
     SkystoneDeterminationPipeline pipeline;
+    static int min = 0;
 
     @Override
     public void runOpMode()
@@ -32,6 +34,7 @@ public class DetectionTest extends LinearOpMode {
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
         pipeline = new SkystoneDeterminationPipeline();
         webcam.setPipeline(pipeline);
+        //phoneCam.setPipeline(pipeline);
 
         // We set the viewport policy to optimized view so the preview doesn't appear 90 deg
         // out when the RC activity is in portrait. We do our actual image processing assuming
@@ -56,7 +59,7 @@ public class DetectionTest extends LinearOpMode {
 
         while (opModeIsActive())
         {
-            telemetry.addData("Analysis", pipeline.getAnalysis());
+            telemetry.addData("Analysis", pipeline.getAnalysis() + "\n" + min );
             telemetry.update();
 
             // Don't burn CPU cycles busy-looping in this sample
@@ -69,11 +72,11 @@ public class DetectionTest extends LinearOpMode {
         /*
          * An enum to define the skystone position
          */
-        public enum SkystonePosition
+        public enum RingPosition
         {
-            LEFT,
-            CENTER,
-            RIGHT
+            ONE,
+            TWO,
+            THREE
         }
 
         /*
@@ -85,11 +88,19 @@ public class DetectionTest extends LinearOpMode {
         /*
          * The core values which define the location and size of the sample regions
          */
-        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(50,118);
-        static final Point REGION2_TOPLEFT_ANCHOR_POINT = new Point(181,98);
-        static final Point REGION3_TOPLEFT_ANCHOR_POINT = new Point(273,80);
-        static final int REGION_WIDTH = 20;
-        static final int REGION_HEIGHT = 20;
+        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(101, 96);
+
+        static final int REGION_WIDTH = 35;
+        static final int REGION_HEIGHT = 35;
+
+        final int TARGET_THREE_THRESHOLD = 150;
+        final int TARGET_TWO_THRESHOLD = 135;
+
+        //less than
+        final int RED_THRESHOLD = 210;
+        final int YELLOW_THRESHOLD = 170;
+        final int BLUE_THRESHOLD = 100;
+
 
         /*
          * Points which actually define the sample region rectangles, derived from above values
@@ -114,18 +125,6 @@ public class DetectionTest extends LinearOpMode {
         Point region1_pointB = new Point(
                 REGION1_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
                 REGION1_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
-        Point region2_pointA = new Point(
-                REGION2_TOPLEFT_ANCHOR_POINT.x,
-                REGION2_TOPLEFT_ANCHOR_POINT.y);
-        Point region2_pointB = new Point(
-                REGION2_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
-                REGION2_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
-        Point region3_pointA = new Point(
-                REGION3_TOPLEFT_ANCHOR_POINT.x,
-                REGION3_TOPLEFT_ANCHOR_POINT.y);
-        Point region3_pointB = new Point(
-                REGION3_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
-                REGION3_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
 
         /*
          * Working variables
@@ -133,10 +132,10 @@ public class DetectionTest extends LinearOpMode {
         Mat region1_Cb, region2_Cb, region3_Cb;
         Mat YCrCb = new Mat();
         Mat Cb = new Mat();
-        int avg1, avg2, avg3;
+        int avg1;
 
         // Volatile since accessed by OpMode thread w/o synchronization
-        private volatile SkystonePosition position = SkystonePosition.LEFT;
+        private volatile RingPosition position = RingPosition.ONE;
 
         /*
          * This function takes the RGB frame, converts to YCrCb,
@@ -145,7 +144,7 @@ public class DetectionTest extends LinearOpMode {
         void inputToCb(Mat input)
         {
             Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
-            Core.extractChannel(YCrCb, Cb, 2);
+            Core.extractChannel(YCrCb, Cb, 1);
         }
 
         @Override
@@ -168,8 +167,6 @@ public class DetectionTest extends LinearOpMode {
              * reverse also holds true.
              */
             region1_Cb = Cb.submat(new Rect(region1_pointA, region1_pointB));
-            region2_Cb = Cb.submat(new Rect(region2_pointA, region2_pointB));
-            region3_Cb = Cb.submat(new Rect(region3_pointA, region3_pointB));
         }
 
         @Override
@@ -223,8 +220,6 @@ public class DetectionTest extends LinearOpMode {
              * at index 2 here.
              */
             avg1 = (int) Core.mean(region1_Cb).val[0];
-            avg2 = (int) Core.mean(region2_Cb).val[0];
-            avg3 = (int) Core.mean(region3_Cb).val[0];
 
             /*
              * Draw a rectangle showing sample region 1 on the screen.
@@ -236,84 +231,27 @@ public class DetectionTest extends LinearOpMode {
                     region1_pointB, // Second point which defines the rectangle
                     BLUE, // The color the rectangle is drawn in
                     2); // Thickness of the rectangle lines
-
-            /*
-             * Draw a rectangle showing sample region 2 on the screen.
-             * Simply a visual aid. Serves no functional purpose.
-             */
-            Imgproc.rectangle(
-                    input, // Buffer to draw on
-                    region2_pointA, // First point which defines the rectangle
-                    region2_pointB, // Second point which defines the rectangle
-                    BLUE, // The color the rectangle is drawn in
-                    2); // Thickness of the rectangle lines
-
-            /*
-             * Draw a rectangle showing sample region 3 on the screen.
-             * Simply a visual aid. Serves no functional purpose.
-             */
-            Imgproc.rectangle(
-                    input, // Buffer to draw on
-                    region3_pointA, // First point which defines the rectangle
-                    region3_pointB, // Second point which defines the rectangle
-                    BLUE, // The color the rectangle is drawn in
-                    2); // Thickness of the rectangle lines
-
-
             /*
              * Find the max of the 3 averages
              */
-            int minOneTwo = Math.min(avg1, avg2);
-            int min = Math.min(minOneTwo, avg3);
+            min = avg1;
 
             /*
              * Now that we found the max, we actually need to go and
              * figure out which sample region that value was from
              */
-            if(min == avg1) // Was it from region 1?
+            if(min < BLUE_THRESHOLD) // Was it from region 1?
             {
-                position = SkystonePosition.LEFT; // Record our analysis
+                position = RingPosition.THREE; // Record our analysis
 
-                /*
-                 * Draw a solid rectangle on top of the chosen region.
-                 * Simply a visual aid. Serves no functional purpose.
-                 */
-                Imgproc.rectangle(
-                        input, // Buffer to draw on
-                        region1_pointA, // First point which defines the rectangle
-                        region1_pointB, // Second point which defines the rectangle
-                        GREEN, // The color the rectangle is drawn in
-                        -1); // Negative thickness means solid fill
             }
-            else if(min == avg2) // Was it from region 2?
+            else if(min < YELLOW_THRESHOLD) // Was it from region 2?
             {
-                position = SkystonePosition.CENTER; // Record our analysis
-
-                /*
-                 * Draw a solid rectangle on top of the chosen region.
-                 * Simply a visual aid. Serves no functional purpose.
-                 */
-                Imgproc.rectangle(
-                        input, // Buffer to draw on
-                        region2_pointA, // First point which defines the rectangle
-                        region2_pointB, // Second point which defines the rectangle
-                        GREEN, // The color the rectangle is drawn in
-                        -1); // Negative thickness means solid fill
+                position = RingPosition.TWO; // Record our analysis
             }
-            else if(min == avg3) // Was it from region 3?
+            else // Was it from region 3?
             {
-                position = SkystonePosition.RIGHT; // Record our analysis
-
-                /*
-                 * Draw a solid rectangle on top of the chosen region.
-                 * Simply a visual aid. Serves no functional purpose.
-                 */
-                Imgproc.rectangle(
-                        input, // Buffer to draw on
-                        region3_pointA, // First point which defines the rectangle
-                        region3_pointB, // Second point which defines the rectangle
-                        GREEN, // The color the rectangle is drawn in
-                        -1); // Negative thickness means solid fill
+                position = RingPosition.ONE; // Record our analysis
             }
 
             /*
@@ -327,10 +265,9 @@ public class DetectionTest extends LinearOpMode {
         /*
          * Call this from the OpMode thread to obtain the latest analysis
          */
-        public SkystonePosition getAnalysis()
+        public RingPosition getAnalysis()
         {
             return position;
         }
     }
 }
-

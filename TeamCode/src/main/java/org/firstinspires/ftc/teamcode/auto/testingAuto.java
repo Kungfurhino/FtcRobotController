@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.drive.DriveConstants;
+import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 
 import ii.SampleMecanumDrive;
 
@@ -15,29 +16,20 @@ public class testingAuto extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-
-        Trajectory straight = drive.trajectoryBuilder(new Pose2d())
-                .forward(30)
-                .build();
-        Trajectory strafe = drive.trajectoryBuilder(new Pose2d(30, 0, 0))
-                .back(30)
-                .build();
-        Trajectory spline = drive.trajectoryBuilder(strafe.end())
-                .splineTo(new Vector2d(40, 40), Math.toRadians(0))
+        //drive.setPoseEstimate(new Pose2d(-37.2,-71.2, Math.toRadians(93)));
+        Trajectory ducksRoute = drive.trajectoryBuilder(new Pose2d(0,0, Math.toRadians(0)))
+                .splineTo(
+                        new Vector2d(30, 30), 0,
+                        SampleMecanumDrive.getVelocityConstraint(30, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
+                )
                 .build();
 
 
         waitForStart();
 
         if(isStopRequested()) return;
-
         //Need to be separate trajectories or else non continous since matching the velocities with the paths is impossible
-        drive.followTrajectory(straight);
-        telemetry.addData("current pose: ",  "\nx: " + drive.getPoseEstimate().getX() + "\ny: " + drive.getPoseEstimate().getY() + "\nheading: " + drive.getPoseEstimate().getHeading());
-        telemetry.update();
-        //telemetry.addData("current pose: ",  "\nx: " + drive.getPoseEstimate().getX() + "\ny: " + drive.getPoseEstimate().getY() + "\nheading: " + drive.getPoseEstimate().getHeading());
-        drive.followTrajectory(strafe);
-        drive.followTrajectory(spline);
-        telemetry.addData("current pose: ",  "\nx: " + drive.getPoseEstimate().getX() + "\ny: " + drive.getPoseEstimate().getY() + "\nheading: " + drive.getPoseEstimate().getHeading());
+        drive.followTrajectory(ducksRoute);
     }
 }
