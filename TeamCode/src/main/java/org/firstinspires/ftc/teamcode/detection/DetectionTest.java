@@ -57,6 +57,7 @@ public class DetectionTest extends LinearOpMode {
         while (opModeIsActive())
         {
             telemetry.addData("Analysis", pipeline.getAnalysis());
+            telemetry.addData("value", pipeline.avg2);
             telemetry.update();
 
             // Don't burn CPU cycles busy-looping in this sample
@@ -71,25 +72,25 @@ public class DetectionTest extends LinearOpMode {
          */
         public enum SkystonePosition
         {
-            LEFT,
-            CENTER,
-            RIGHT
+            ONE,
+            TWO,
+            THREE
         }
 
         /*
          * Some color constants
          */
         static final Scalar BLUE = new Scalar(0, 0, 255);
-        static final Scalar GREEN = new Scalar(0, 255, 0);
+        static final Scalar YELLOW = new Scalar(255, 255, 0);
+        static final Scalar RED = new Scalar(255, 0, 0);
 
         /*
          * The core values which define the location and size of the sample regions
          */
-        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(50,118);
+
         static final Point REGION2_TOPLEFT_ANCHOR_POINT = new Point(181,98);
-        static final Point REGION3_TOPLEFT_ANCHOR_POINT = new Point(273,80);
-        static final int REGION_WIDTH = 20;
-        static final int REGION_HEIGHT = 20;
+        static final int REGION_WIDTH = 15;
+        static final int REGION_HEIGHT = 15;
 
         /*
          * Points which actually define the sample region rectangles, derived from above values
@@ -108,35 +109,23 @@ public class DetectionTest extends LinearOpMode {
          *   ------------------------------------
          *
          */
-        Point region1_pointA = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x,
-                REGION1_TOPLEFT_ANCHOR_POINT.y);
-        Point region1_pointB = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
-                REGION1_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
         Point region2_pointA = new Point(
                 REGION2_TOPLEFT_ANCHOR_POINT.x,
                 REGION2_TOPLEFT_ANCHOR_POINT.y);
         Point region2_pointB = new Point(
                 REGION2_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
                 REGION2_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
-        Point region3_pointA = new Point(
-                REGION3_TOPLEFT_ANCHOR_POINT.x,
-                REGION3_TOPLEFT_ANCHOR_POINT.y);
-        Point region3_pointB = new Point(
-                REGION3_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
-                REGION3_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
 
         /*
          * Working variables
          */
-        Mat region1_Cb, region2_Cb, region3_Cb;
+        Mat region2_Cb;
         Mat YCrCb = new Mat();
         Mat Cb = new Mat();
-        int avg1, avg2, avg3;
+        int avg2;
 
         // Volatile since accessed by OpMode thread w/o synchronization
-        private volatile SkystonePosition position = SkystonePosition.LEFT;
+        private volatile SkystonePosition position = SkystonePosition.ONE;
 
         /*
          * This function takes the RGB frame, converts to YCrCb,
@@ -167,49 +156,12 @@ public class DetectionTest extends LinearOpMode {
              * buffer. Any changes to the child affect the parent, and the
              * reverse also holds true.
              */
-            region1_Cb = Cb.submat(new Rect(region1_pointA, region1_pointB));
             region2_Cb = Cb.submat(new Rect(region2_pointA, region2_pointB));
-            region3_Cb = Cb.submat(new Rect(region3_pointA, region3_pointB));
         }
 
         @Override
         public Mat processFrame(Mat input)
         {
-            /*
-             * Overview of what we're doing:
-             *
-             * We first convert to YCrCb color space, from RGB color space.
-             * Why do we do this? Well, in the RGB color space, chroma and
-             * luma are intertwined. In YCrCb, chroma and luma are separated.
-             * YCrCb is a 3-channel color space, just like RGB. YCrCb's 3 channels
-             * are Y, the luma channel (which essentially just a B&W image), the
-             * Cr channel, which records the difference from red, and the Cb channel,
-             * which records the difference from blue. Because chroma and luma are
-             * not related in YCrCb, vision code written to look for certain values
-             * in the Cr/Cb channels will not be severely affected by differing
-             * light intensity, since that difference would most likely just be
-             * reflected in the Y channel.
-             *
-             * After we've converted to YCrCb, we extract just the 2nd channel, the
-             * Cb channel. We do this because stones are bright yellow and contrast
-             * STRONGLY on the Cb channel against everything else, including SkyStones
-             * (because SkyStones have a black label).
-             *
-             * We then take the average pixel value of 3 different regions on that Cb
-             * channel, one positioned over each stone. The brightest of the 3 regions
-             * is where we assume the SkyStone to be, since the normal stones show up
-             * extremely darkly.
-             *
-             * We also draw rectangles on the screen showing where the sample regions
-             * are, as well as drawing a solid rectangle over top the sample region
-             * we believe is on top of the SkyStone.
-             *
-             * In order for this whole process to work correctly, each sample region
-             * should be positioned in the center of each of the first 3 stones, and
-             * be small enough such that only the stone is sampled, and not any of the
-             * surroundings.
-             */
-
             /*
              * Get the Cb channel of the input frame after conversion to YCrCb
              */
@@ -222,23 +174,10 @@ public class DetectionTest extends LinearOpMode {
              * pixel value of the 3-channel image, and referenced the value
              * at index 2 here.
              */
-            avg1 = (int) Core.mean(region1_Cb).val[0];
             avg2 = (int) Core.mean(region2_Cb).val[0];
-            avg3 = (int) Core.mean(region3_Cb).val[0];
 
             /*
              * Draw a rectangle showing sample region 1 on the screen.
-             * Simply a visual aid. Serves no functional purpose.
-             */
-            Imgproc.rectangle(
-                    input, // Buffer to draw on
-                    region1_pointA, // First point which defines the rectangle
-                    region1_pointB, // Second point which defines the rectangle
-                    BLUE, // The color the rectangle is drawn in
-                    2); // Thickness of the rectangle lines
-
-            /*
-             * Draw a rectangle showing sample region 2 on the screen.
              * Simply a visual aid. Serves no functional purpose.
              */
             Imgproc.rectangle(
@@ -249,45 +188,16 @@ public class DetectionTest extends LinearOpMode {
                     2); // Thickness of the rectangle lines
 
             /*
-             * Draw a rectangle showing sample region 3 on the screen.
-             * Simply a visual aid. Serves no functional purpose.
-             */
-            Imgproc.rectangle(
-                    input, // Buffer to draw on
-                    region3_pointA, // First point which defines the rectangle
-                    region3_pointB, // Second point which defines the rectangle
-                    BLUE, // The color the rectangle is drawn in
-                    2); // Thickness of the rectangle lines
-
-
-            /*
              * Find the max of the 3 averages
              */
-            int minOneTwo = Math.min(avg1, avg2);
-            int min = Math.min(minOneTwo, avg3);
 
             /*
              * Now that we found the max, we actually need to go and
              * figure out which sample region that value was from
              */
-            if(min == avg1) // Was it from region 1?
+            if(avg2 < 100) // Was it from region 1?
             {
-                position = SkystonePosition.LEFT; // Record our analysis
-
-                /*
-                 * Draw a solid rectangle on top of the chosen region.
-                 * Simply a visual aid. Serves no functional purpose.
-                 */
-                Imgproc.rectangle(
-                        input, // Buffer to draw on
-                        region1_pointA, // First point which defines the rectangle
-                        region1_pointB, // Second point which defines the rectangle
-                        GREEN, // The color the rectangle is drawn in
-                        -1); // Negative thickness means solid fill
-            }
-            else if(min == avg2) // Was it from region 2?
-            {
-                position = SkystonePosition.CENTER; // Record our analysis
+                position = SkystonePosition.TWO; // Record our analysis
 
                 /*
                  * Draw a solid rectangle on top of the chosen region.
@@ -297,12 +207,12 @@ public class DetectionTest extends LinearOpMode {
                         input, // Buffer to draw on
                         region2_pointA, // First point which defines the rectangle
                         region2_pointB, // Second point which defines the rectangle
-                        GREEN, // The color the rectangle is drawn in
+                        YELLOW, // The color the rectangle is drawn in
                         -1); // Negative thickness means solid fill
             }
-            else if(min == avg3) // Was it from region 3?
+            else if(avg2 < 125) // Was it from region 2?
             {
-                position = SkystonePosition.RIGHT; // Record our analysis
+                position = SkystonePosition.ONE; // Record our analysis
 
                 /*
                  * Draw a solid rectangle on top of the chosen region.
@@ -310,9 +220,24 @@ public class DetectionTest extends LinearOpMode {
                  */
                 Imgproc.rectangle(
                         input, // Buffer to draw on
-                        region3_pointA, // First point which defines the rectangle
-                        region3_pointB, // Second point which defines the rectangle
-                        GREEN, // The color the rectangle is drawn in
+                        region2_pointA, // First point which defines the rectangle
+                        region2_pointB, // Second point which defines the rectangle
+                        RED, // The color the rectangle is drawn in
+                        -1); // Negative thickness means solid fill
+            }
+            else // Was it from region 3?
+            {
+                position = SkystonePosition.THREE; // Record our analysis
+
+                /*
+                 * Draw a solid rectangle on top of the chosen region.
+                 * Simply a visual aid. Serves no functional purpose.
+                 */
+                Imgproc.rectangle(
+                        input, // Buffer to draw on
+                        region2_pointA, // First point which defines the rectangle
+                        region2_pointB, // Second point which defines the rectangle
+                        BLUE, // The color the rectangle is drawn in
                         -1); // Negative thickness means solid fill
             }
 
