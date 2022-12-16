@@ -18,23 +18,33 @@ public class powerPlayConfiguration {
         public static final String MOTOR_FL = "wheelFL";
         public static final String MOTOR_BR = "wheelBR";
         public static final String MOTOR_BL = "wheelBL";
-        public static final String ROADHOG = "roadhog"; //intake drawer slides
-        public static final String GAREN = "garen";
-        public static final String LEFT_KILLUGON = "leftKillugon";
-        public static final String RIGHT_KILLUGON = "rightKillugon";
-        public static final String WHITE_CLAW = "whiteclaw";
-         
-        public static final String INTAKE = "intake";
-        public static final String INTAKE2 = "intake2";
-        public DcMotorEx motorFR;
-        public DcMotorEx motorFL;
-        public DcMotorEx motorBR;
-        public DcMotorEx motorBL;
-        public DcMotorEx roadhog;
-        public DcMotorEx garen;
-        public DcMotorEx leftKillugon;
-        public DcMotorEx rightKillugon;
-        public CRServo whiteclaw;
+        public DcMotorEx rightFront;
+        public DcMotorEx leftFront;
+        public DcMotorEx leftRear;
+        public DcMotorEx rightRear;
+
+
+        public static final String LEFT_VERTICAL_SLIDE = "leftVerticalSlide";
+        public static final String RIGHT_VERTICAL_SLIDE = "rightVerticalSlide";
+        public DcMotorEx leftVerticalSlide;
+        public DcMotorEx rightVerticalSlide;
+
+        public static final String INTAKE_DRAWER_SLIDE = "intakeDrawerSlide";
+        public static final String CLAW_LIFT = "clawLift";
+        public DcMotorEx intakeDrawerSlide;
+        public DcMotorEx clawLift;
+
+        public static final String CLAW_PIVOT = "clawPivot";
+        public static final String LEFT_CLAW = "leftClaw";
+        public static final String RIGHT_CLAW = "rightClaw";
+        public Servo rightClaw;
+        public Servo clawPivot;
+
+        public static final String LEFT_ROLLER = "leftRoller";
+        public static final String RIGHT_ROLLER = "rightRoller";
+        public CRServo leftRoller;
+        public CRServo rightRoller;
+        public CRServo horizontalSlide;
 
         HardwareMap hwMap           =  null;
 
@@ -51,10 +61,24 @@ public class powerPlayConfiguration {
 
             hwMap = hardwareMap;
 
-            motorFR = hwMap.get(DcMotorEx.class, "rightFront");
-            motorFL = hwMap.get(DcMotorEx.class, "leftFront");
-            motorBR = hwMap.get(DcMotorEx.class, "rightRear");
-            motorBL = hwMap.get(DcMotorEx.class, "leftRear");
+            rightFront = hwMap.get(DcMotorEx.class, "rightFront");
+            leftFront = hwMap.get(DcMotorEx.class, "leftFront");
+            rightRear = hwMap.get(DcMotorEx.class, "rightRear");
+            leftRear = hwMap.get(DcMotorEx.class, "leftRear");
+
+
+            rightVerticalSlide = hwMap.get(DcMotorEx.class, "rightVerticalSlide");
+            leftVerticalSlide = hwMap.get(DcMotorEx.class, "leftVerticalSlide");
+
+            intakeDrawerSlide = hwMap.get(DcMotorEx.class, "intakeDrawerSlide");
+            clawLift = hwMap.get(DcMotorEx.class, "clawLift");
+
+            rightClaw = hwMap.get(Servo.class, "rightClaw");
+            clawPivot = hwMap.get(Servo.class, "clawPivot");
+
+            leftRoller = hwMap.get(CRServo.class, "leftRoller");
+            rightRoller = hwMap.get(CRServo.class, "rightRoller");
+            horizontalSlide = hwMap.get(CRServo.class, "horizontalSlide");
 
             imu = hardwareMap.get(BNO055IMU.class, "imu");
 
@@ -69,4 +93,18 @@ public class powerPlayConfiguration {
             BNO055IMUUtil.remapAxes(imu, AxesOrder.XYZ, AxesSigns.NPN);
         }
 
+        public void zeroMotors(){
+            rightVerticalSlide.setPower(0);
+            leftVerticalSlide.setPower(0);
+            intakeDrawerSlide.setPower(0);
+            clawLift.setPower(0);
+            leftRoller.setPower(0);
+            rightRoller.setPower(0);
+            horizontalSlide.setPower(0);
+        }
+
+        public void zeroServos(){
+            rightClaw.setPosition(0);
+            clawPivot.setPosition(0);
+        }
 }

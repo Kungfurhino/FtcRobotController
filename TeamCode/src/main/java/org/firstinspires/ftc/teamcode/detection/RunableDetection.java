@@ -18,16 +18,16 @@ import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvWebcam;
 
-public class DetectionTest {
-    OpenCvInternalCamera phoneCam;
+@TeleOp
+public class RunableDetection extends LinearOpMode {
     OpenCvWebcam webcam;
     SkystoneDeterminationPipeline pipeline;
 
-    public void init(HardwareMap hardwareMap)
+    @Override
+    public void runOpMode() throws InterruptedException
     {
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        //phoneCam = OpenCvCameraFactory.getInstance().createInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
         pipeline = new SkystoneDeterminationPipeline();
         webcam.setPipeline(pipeline);
@@ -50,14 +50,17 @@ public class DetectionTest {
 
             }
         });
-    }
 
-    public DetectionTest() {
+        waitForStart();
 
-    }
+        while (opModeIsActive())
+        {
+            telemetry.addData("Analysis", pipeline.getAnalysis());
+            telemetry.update();
 
-    public SkystoneDeterminationPipeline.SkystonePosition getPosition(){
-        return pipeline.getAnalysis();
+            // Don't burn CPU cycles busy-looping in this sample
+            sleep(50);
+        }
     }
 
     public static class SkystoneDeterminationPipeline extends OpenCvPipeline
@@ -120,7 +123,7 @@ public class DetectionTest {
         int avg2;
 
         // Volatile since accessed by OpMode thread w/o synchronization
-        private volatile SkystonePosition position = null;
+        private volatile SkystonePosition position = SkystonePosition.ONE;
 
         /*
          * This function takes the RGB frame, converts to YCrCb,
@@ -249,7 +252,6 @@ public class DetectionTest {
          */
         public SkystonePosition getAnalysis()
         {
-
             return position;
         }
     }

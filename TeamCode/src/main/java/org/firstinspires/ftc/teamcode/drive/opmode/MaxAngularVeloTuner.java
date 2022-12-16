@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import ii.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 import java.util.Objects;
 
@@ -56,7 +56,7 @@ public class MaxAngularVeloTuner extends LinearOpMode {
 
             Pose2d poseVelo = Objects.requireNonNull(drive.getPoseVelocity(), "poseVelocity() must not be null. Ensure that the getWheelVelocities() method has been overridden in your localizer.");
 
-            maxAngVelocity = Math.max(poseVelo.getHeading(), maxAngVelocity);
+            maxAngVelocity = poseVelo.getHeading();//Math.max(poseVelo.getHeading(), maxAngVelocity);
         }
 
         drive.setDrivePower(new Pose2d());
