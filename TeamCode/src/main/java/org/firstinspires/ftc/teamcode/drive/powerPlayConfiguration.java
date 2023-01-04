@@ -23,28 +23,17 @@ public class powerPlayConfiguration {
         public DcMotorEx leftRear;
         public DcMotorEx rightRear;
 
-
         public static final String LEFT_VERTICAL_SLIDE = "leftVerticalSlide";
         public static final String RIGHT_VERTICAL_SLIDE = "rightVerticalSlide";
         public DcMotorEx leftVerticalSlide;
         public DcMotorEx rightVerticalSlide;
 
-        public static final String INTAKE_DRAWER_SLIDE = "intakeDrawerSlide";
-        public static final String CLAW_LIFT = "clawLift";
-        public DcMotorEx intakeDrawerSlide;
-        public DcMotorEx clawLift;
+        public DcMotorEx intakeDrawerSlideRight;
+        public DcMotorEx intakeDrawerSlideLeft;
 
-        public static final String CLAW_PIVOT = "clawPivot";
-        public static final String LEFT_CLAW = "leftClaw";
-        public static final String RIGHT_CLAW = "rightClaw";
-        public Servo rightClaw;
-        public Servo clawPivot;
-
-        public static final String LEFT_ROLLER = "leftRoller";
-        public static final String RIGHT_ROLLER = "rightRoller";
-        public CRServo leftRoller;
-        public CRServo rightRoller;
-        public CRServo horizontalSlide;
+        public Servo claw;
+        public Servo leftPivot;
+        public Servo rightPivot;
 
         HardwareMap hwMap           =  null;
 
@@ -70,15 +59,13 @@ public class powerPlayConfiguration {
             rightVerticalSlide = hwMap.get(DcMotorEx.class, "rightVerticalSlide");
             leftVerticalSlide = hwMap.get(DcMotorEx.class, "leftVerticalSlide");
 
-            intakeDrawerSlide = hwMap.get(DcMotorEx.class, "intakeDrawerSlide");
-            clawLift = hwMap.get(DcMotorEx.class, "clawLift");
+            intakeDrawerSlideLeft = hwMap.get(DcMotorEx.class, "intakeDrawerSlideLeft");
+            intakeDrawerSlideRight = hwMap.get(DcMotorEx.class, "intakeDrawerSlideRight");
 
-            rightClaw = hwMap.get(Servo.class, "rightClaw");
-            clawPivot = hwMap.get(Servo.class, "clawPivot");
+            claw = hwMap.get(Servo.class, "claw");
 
-            leftRoller = hwMap.get(CRServo.class, "leftRoller");
-            rightRoller = hwMap.get(CRServo.class, "rightRoller");
-            horizontalSlide = hwMap.get(CRServo.class, "horizontalSlide");
+            rightPivot = hwMap.get(Servo.class, "rightPivot");
+            leftPivot = hwMap.get(Servo.class, "leftPivot");
 
             imu = hardwareMap.get(BNO055IMU.class, "imu");
 
@@ -96,15 +83,10 @@ public class powerPlayConfiguration {
         public void zeroMotors(){
             rightVerticalSlide.setPower(0);
             leftVerticalSlide.setPower(0);
-            intakeDrawerSlide.setPower(0);
-            clawLift.setPower(0);
-            leftRoller.setPower(0);
-            rightRoller.setPower(0);
-            horizontalSlide.setPower(0);
+            intakeDrawerSlideLeft.setPower(0);
+            intakeDrawerSlideRight.setPower(0);
         }
 
         public void zeroServos(){
-            rightClaw.setPosition(0);
-            clawPivot.setPosition(0);
         }
 }

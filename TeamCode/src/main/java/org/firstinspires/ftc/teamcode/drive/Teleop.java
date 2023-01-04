@@ -32,10 +32,6 @@ public class Teleop extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         robot = new SampleMecanumDrive(hardwareMap);
-        robot.config.clawLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.config.clawLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        robot.config.intakeDrawerSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.config.intakeDrawerSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robot.config.leftVerticalSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.config.leftVerticalSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         waitForStart();
@@ -43,7 +39,7 @@ public class Teleop extends LinearOpMode {
         if(isStopRequested()){
             return;
         }
-
+        /*
         while (opModeIsActive() && !isStopRequested()) {
                 switch(currentState){
                     case PIVOT1:
@@ -159,7 +155,9 @@ public class Teleop extends LinearOpMode {
             telemetry.addData("right Rear", robot.rightRear.getCurrentPosition());
             telemetry.update();
         }
-
+        */
     }
+
+
 
 }
