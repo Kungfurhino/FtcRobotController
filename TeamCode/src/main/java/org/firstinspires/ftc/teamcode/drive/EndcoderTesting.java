@@ -8,17 +8,21 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 @TeleOp
 public class EndcoderTesting extends LinearOpMode {
 
+    //2600 ticks for high goal
     enum State{
         IDLE,
         SLOW_SERVO_DOWN,
         SlOW_SERVO_UP,
         PULL_IN_SLIDES,
+        RAISE_VERT,
+        PULL_IN_VERT,
         DROP_CONE
     }
 
     private int verticalLiftTicks;
     private int drawerSlidesTicks;
     private int initialDrawerTicks = 0;
+    private int initialVerticalTicks = 0;
 
     State currentState = State.IDLE;
 
@@ -62,20 +66,40 @@ public class EndcoderTesting extends LinearOpMode {
                 case PULL_IN_SLIDES:
                     robot.config.rightPivot.setPosition(0.5);
                     robot.config.leftPivot.setPosition(0.5);
-                    robot.config.leftVerticalSlide.setPower(1);
-                    robot.config.rightVerticalSlide.setPower(1);
-                    if(robot.config.leftVerticalSlide.getCurrentPosition() <= initialDrawerTicks){
-                        initialDrawerTicks = robot.config.leftVerticalSlide.getCurrentPosition();
+                    robot.config.intakeDrawerSlideRight.setPower(-1);
+                    robot.config.intakeDrawerSlideLeft.setPower(-1);
+                    if(robot.config.intakeDrawerSlideLeft.getCurrentPosition() <= initialDrawerTicks){
+                        initialDrawerTicks = robot.config.intakeDrawerSlideLeft.getCurrentPosition();
+                        robot.config.rightPivot.setPosition(0.227);
+                        robot.config.leftPivot.setPosition(0.773);
                         currentState = State.IDLE;
                     }
                     break;
                 case DROP_CONE:
-                    robot.config.rightPivot.setPosition(0.2);
-                    robot.config.leftPivot.setPosition(0.8);
                     robot.config.claw.setPosition(0.6);
-                    robot.config.rightPivot.setPosition(0.9);
-                    robot.config.leftPivot.setPosition(0.1);
-                    currentState = State.IDLE;
+                    long currentTime = System.currentTimeMillis();
+                    if(System.currentTimeMillis() - currentTime >= 300 ){
+                        robot.config.rightPivot.setPosition(0.84);
+                        robot.config.leftPivot.setPosition(0.16);
+                        currentState = State.IDLE;
+                    }
+                    break;
+                case RAISE_VERT:
+                    robot.config.leftVerticalSlide.setPower(1);
+                    robot.config.rightVerticalSlide.setPower(1);
+                    if(robot.config.leftVerticalSlide.getCurrentPosition() >= 2350){
+                        robot.config.leftVerticalSlide.setPower(-1);
+                        robot.config.rightVerticalSlide.setPower(-1);
+                        currentState = State.PULL_IN_VERT;
+                    }
+                    break;
+                case PULL_IN_VERT:
+                    if(robot.config.leftVerticalSlide.getCurrentPosition() <= 0){
+                        initialVerticalTicks = robot.config.leftVerticalSlide.getCurrentPosition();
+                        robot.config.leftVerticalSlide.setPower(0);
+                        robot.config.rightVerticalSlide.setPower(0);
+                        currentState = State.IDLE;
+                    }
                     break;
                 case IDLE:
                     currentTime = System.currentTimeMillis();
@@ -84,48 +108,67 @@ public class EndcoderTesting extends LinearOpMode {
                     break;
             }
             if (-gamepad2.left_stick_y != 0) {
-                robot.config.rightVerticalSlide.setPower(-gamepad2.left_stick_y);
-                robot.config.leftVerticalSlide.setPower(-gamepad2.left_stick_y);
-            } else if (gamepad1.left_bumper) {
-                robot.config.intakeDrawerSlideLeft.setPower(1);
-                robot.config.intakeDrawerSlideRight.setPower(1);
-            } else if (gamepad1.right_bumper){
-                robot.config.intakeDrawerSlideLeft.setPower(-1);
-                robot.config.intakeDrawerSlideRight.setPower(-1);
-            }else if (gamepad2.dpad_left) {
-                robot.config.rightPivot.setPosition(0.2);
-                robot.config.leftPivot.setPosition(0.8);
-            } else if (gamepad2.dpad_right) {
-                robot.config.rightPivot.setPosition(0.9);
-                robot.config.leftPivot.setPosition(0.1);
-            } else if (gamepad2.b) {
-                robot.config.claw.setPosition(0.6);
-            } else if (gamepad2.x) {
-                robot.config.claw.setPosition(0.85);
-            } else if (gamepad2.right_bumper) {
-                robot.config.claw.setPosition(0.7);
-            } else if (gamepad2.dpad_down) {
-                currentState = State.PULL_IN_SLIDES;
-            } else if(gamepad2.dpad_up){
-                currentState = State.DROP_CONE;
-            } else{
-                robot.zeroAllMotors();
-                robot.setWeightedDrivePower(
-                        new Pose2d(
-                                -gamepad1.left_stick_y,
-                                -gamepad1.left_stick_x,
-                                -gamepad1.right_stick_x
-                        )
-                );
-                telemetry.addData("rightRear", robot.rightRear.getCurrentPosition() + "\n");
-                telemetry.addData("leftFront", robot.leftFront.getCurrentPosition() + "\n");
-                telemetry.addData("leftRear", robot.leftRear.getCurrentPosition() + "\n");
-                telemetry.addData("Right Vertical Slide", robot.config.rightVerticalSlide.getCurrentPosition() + "\n");
-                telemetry.addData("Left Vertical Slide", robot.config.leftVerticalSlide.getCurrentPosition() + "\n");
-                telemetry.addData("Intake Drawer slides", robot.config.intakeDrawerSlideRight.getCurrentPosition() + "\n");
-                telemetry.update();
-                robot.update();
+                robot.config.intakeDrawerSlideLeft.setPower(-gamepad2.left_stick_y);
+                robot.config.intakeDrawerSlideRight.setPower(-gamepad2.left_stick_y);
+            }else if(currentState != State.PULL_IN_SLIDES){
+                robot.config.intakeDrawerSlideLeft.setPower(0);
+                robot.config.intakeDrawerSlideRight.setPower(0);
             }
+            if (gamepad1.left_bumper) {
+                robot.config.leftVerticalSlide.setPower(1);
+                robot.config.rightVerticalSlide.setPower(1);
+            }else if (gamepad1.right_bumper){
+                robot.config.leftVerticalSlide.setPower(-1);
+                robot.config.rightVerticalSlide.setPower(-1);
+            }else if(currentState != State.RAISE_VERT && currentState != State.PULL_IN_VERT){
+                robot.config.leftVerticalSlide.setPower(0);
+                robot.config.rightVerticalSlide.setPower(0);
+            }
+            if (gamepad2.dpad_left) {
+                robot.config.rightPivot.setPosition(0.227);
+                robot.config.leftPivot.setPosition(0.773);
+            }
+            if (gamepad2.dpad_right) {
+                robot.config.rightPivot.setPosition(0.84);
+                robot.config.leftPivot.setPosition(0.16);
+            }
+            if (gamepad2.b) {
+                robot.config.claw.setPosition(0.6);
+            }
+            if (gamepad2.x) {
+                robot.config.claw.setPosition(0.85);
+            }
+            if (gamepad2.right_bumper) {
+                robot.config.claw.setPosition(0.7);
+            }
+            if (gamepad2.dpad_up) {
+                currentState = State.PULL_IN_SLIDES;
+            }
+            if(gamepad2.dpad_down){
+                currentState = State.DROP_CONE;
+            }
+            if(gamepad1.left_trigger != 0){
+                currentState = State.RAISE_VERT;
+            }
+            if(gamepad2.left_bumper){
+                currentState = State.IDLE;
+            }
+            robot.setWeightedDrivePower(
+                    new Pose2d(
+                            -gamepad1.left_stick_y,
+                            -gamepad1.left_stick_x,
+                            -gamepad1.right_stick_x
+                    )
+            );
+            telemetry.addData("rightRear", robot.rightRear.getCurrentPosition());
+            telemetry.addData("leftFront", robot.leftFront.getCurrentPosition());
+            telemetry.addData("leftRear", robot.leftRear.getCurrentPosition());
+            telemetry.addData("Right Vertical Slide", robot.config.rightVerticalSlide.getCurrentPosition());
+            telemetry.addData("Left Vertical Slide", robot.config.leftVerticalSlide.getCurrentPosition());
+            telemetry.addData("Intake Drawer slides", robot.config.intakeDrawerSlideRight.getCurrentPosition());
+            telemetry.addData("Initial Ticks", initialDrawerTicks);
+            telemetry.update();
+            robot.update();
         }
     }
 
