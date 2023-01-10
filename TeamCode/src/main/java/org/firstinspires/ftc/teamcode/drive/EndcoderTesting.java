@@ -37,6 +37,8 @@ public class EndcoderTesting extends LinearOpMode {
         robot.rightRear.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robot.config.intakeDrawerSlideRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.config.intakeDrawerSlideRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        robot.config.intakeDrawerSlideLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.config.intakeDrawerSlideLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robot.config.leftVerticalSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.config.leftVerticalSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
@@ -70,24 +72,26 @@ public class EndcoderTesting extends LinearOpMode {
                     robot.config.intakeDrawerSlideLeft.setPower(-1);
                     if(robot.config.intakeDrawerSlideLeft.getCurrentPosition() <= initialDrawerTicks){
                         initialDrawerTicks = robot.config.intakeDrawerSlideLeft.getCurrentPosition();
-                        robot.config.rightPivot.setPosition(0.227);
-                        robot.config.leftPivot.setPosition(0.773);
-                        currentState = State.IDLE;
+                        robot.config.rightPivot.setPosition(0.22);
+                        robot.config.leftPivot.setPosition(0.78);
+                        currentTime = System.currentTimeMillis();
+                        currentState = State.DROP_CONE;
                     }
                     break;
                 case DROP_CONE:
-                    robot.config.claw.setPosition(0.6);
-                    long currentTime = System.currentTimeMillis();
-                    if(System.currentTimeMillis() - currentTime >= 300 ){
-                        robot.config.rightPivot.setPosition(0.84);
-                        robot.config.leftPivot.setPosition(0.16);
-                        currentState = State.IDLE;
+                    if(System.currentTimeMillis() - currentTime >= 1200){
+                        robot.config.claw.setPosition(0.6);
+                        if(System.currentTimeMillis() - currentTime >= 1500 ){
+                            robot.config.rightPivot.setPosition(0.8);
+                            robot.config.leftPivot.setPosition(0.2);
+                            currentState = State.IDLE;
+                        }
                     }
                     break;
                 case RAISE_VERT:
                     robot.config.leftVerticalSlide.setPower(1);
                     robot.config.rightVerticalSlide.setPower(1);
-                    if(robot.config.leftVerticalSlide.getCurrentPosition() >= 2350){
+                    if(robot.config.leftVerticalSlide.getCurrentPosition() >= 2350){//-2350
                         robot.config.leftVerticalSlide.setPower(-1);
                         robot.config.rightVerticalSlide.setPower(-1);
                         currentState = State.PULL_IN_VERT;
@@ -115,22 +119,22 @@ public class EndcoderTesting extends LinearOpMode {
                 robot.config.intakeDrawerSlideRight.setPower(0);
             }
             if (gamepad1.left_bumper) {
-                robot.config.leftVerticalSlide.setPower(1);
-                robot.config.rightVerticalSlide.setPower(1);
+                robot.config.leftVerticalSlide.setPower(0.7);
+                robot.config.rightVerticalSlide.setPower(0.7);
             }else if (gamepad1.right_bumper){
-                robot.config.leftVerticalSlide.setPower(-1);
-                robot.config.rightVerticalSlide.setPower(-1);
+                robot.config.leftVerticalSlide.setPower(-0.7);
+                robot.config.rightVerticalSlide.setPower(-0.7);
             }else if(currentState != State.RAISE_VERT && currentState != State.PULL_IN_VERT){
                 robot.config.leftVerticalSlide.setPower(0);
                 robot.config.rightVerticalSlide.setPower(0);
             }
-            if (gamepad2.dpad_left) {
-                robot.config.rightPivot.setPosition(0.227);
-                robot.config.leftPivot.setPosition(0.773);
+            if (gamepad2.dpad_left) { //up
+                robot.config.rightPivot.setPosition(0.245);
+                robot.config.leftPivot.setPosition(0.755);
             }
-            if (gamepad2.dpad_right) {
-                robot.config.rightPivot.setPosition(0.84);
-                robot.config.leftPivot.setPosition(0.16);
+            if (gamepad2.dpad_right) { // down
+                robot.config.rightPivot.setPosition(0.75);//8
+                robot.config.leftPivot.setPosition(0.25);//2
             }
             if (gamepad2.b) {
                 robot.config.claw.setPosition(0.6);
@@ -144,9 +148,9 @@ public class EndcoderTesting extends LinearOpMode {
             if (gamepad2.dpad_up) {
                 currentState = State.PULL_IN_SLIDES;
             }
-            if(gamepad2.dpad_down){
-                currentState = State.DROP_CONE;
-            }
+            //if(gamepad2.dpad_down){
+            //    currentState = State.DROP_CONE;
+            //}
             if(gamepad1.left_trigger != 0){
                 currentState = State.RAISE_VERT;
             }
@@ -165,7 +169,7 @@ public class EndcoderTesting extends LinearOpMode {
             telemetry.addData("leftRear", robot.leftRear.getCurrentPosition());
             telemetry.addData("Right Vertical Slide", robot.config.rightVerticalSlide.getCurrentPosition());
             telemetry.addData("Left Vertical Slide", robot.config.leftVerticalSlide.getCurrentPosition());
-            telemetry.addData("Intake Drawer slides", robot.config.intakeDrawerSlideRight.getCurrentPosition());
+            telemetry.addData("Intake Drawer slides", robot.config.intakeDrawerSlideRight.getCurrentPosition() + ", " + robot.config.intakeDrawerSlideLeft.getCurrentPosition());
             telemetry.addData("Initial Ticks", initialDrawerTicks);
             telemetry.update();
             robot.update();

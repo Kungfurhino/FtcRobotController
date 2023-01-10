@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.detection.DetectionClass;
 import org.firstinspires.ftc.teamcode.detection.DetectionTest;
 
 @Autonomous
-public class AutoTesting extends LinearOpMode {
+public class ParkingAuto extends LinearOpMode {
 
     DetectionTest.SkystoneDeterminationPipeline.SkystonePosition position;
     private static SampleMecanumDrive robot;
@@ -44,19 +44,19 @@ public class AutoTesting extends LinearOpMode {
         telemetry.addData("Detection", position);
         telemetry.update();
         sleep(2000);
-        while(robot.leftFront.getCurrentPosition() > -40000){
-            robot.setMotorPowers(0.5, 0.5, 0.5, 0.5);
+        while(robot.leftFront.getCurrentPosition() < 43000){
+            robot.setMotorPowers(-0.5, -0.5, -0.5, -0.5);
             telemetry.addData("LeftFront", robot.leftFront.getCurrentPosition());
             telemetry.update();
         }
         if(position == DetectionTest.SkystoneDeterminationPipeline.SkystonePosition.THREE){
-            while(robot.rightRear.getCurrentPosition() > -41000){ //strafing right
-                robot.setMotorPowers(0.5, -0.5, 0.5, -0.5);
+            while(robot.rightRear.getCurrentPosition() < 42000){ //strafing right
+                robot.setMotorPowers(-0.5, 0.5, -0.5, 0.5);
                 telemetry.addData("Right Rear", robot.rightRear.getCurrentPosition());
             }
         }else if(position == DetectionTest.SkystoneDeterminationPipeline.SkystonePosition.ONE){
-            while(robot.rightRear.getCurrentPosition() < 44000){ //strafing left
-                robot.setMotorPowers(-0.5, 0.5, -0.5, 0.5);
+            while(robot.rightRear.getCurrentPosition() > -44400){ //strafing left
+                robot.setMotorPowers(0.5, -0.5, 0.5, -0.5);
                 telemetry.addData("Right Rear", robot.rightRear.getCurrentPosition());
             }
         }

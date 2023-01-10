@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.detection.DetectionTest;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
 
 @Autonomous
-public class BlueSideAutonomous extends LinearOpMode {
+public class PreLoadAuto extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -53,32 +53,18 @@ public class BlueSideAutonomous extends LinearOpMode {
         telemetry.addData("position", pos.toString());
 
         drive.followTrajectorySequence(drive.trajectorySequenceBuilder(new Pose2d(35, 58, Math.toRadians(90)))
-                        .back(54.5)
-                        .turn(Math.toRadians(-76))
-                        .build()
-                );
+                .back(54.5)
+                .turn(Math.toRadians(-76))
+                .build()
+        );
         drive.setMotorPowers(0.6,-0.6,0.6,-0.6);
         sleep(320);
         drive.setMotorPowers(0,0,0,0);
         sleep(200);
         drive.setMotorPowers(0,0,0,0);
-
-        scorecone(0, drive);
-        for(int i = 1; i <= 4; i++){
-            scorecone(i, drive);
-            pullinslides(drive);
-            dropcone(drive);
-        }
-        /*
-        for(int i=0; i<=4;i++)
-        {
-            getcone(i, drive); //get cone
-            pullinslides(drive); //pull in
-            dropcone(drive); //drop cone
-            scorecone(drive); //score cone
-            pullverticalslides(drive); //pull in
-        }
-        */
+        getoff(drive);
+        scorecone(drive);
+        pullverticalslides(drive);
 
         drive.config.rightPivot.setPosition(0.27);//Bring arm up to prep for parking
         drive.config.leftPivot.setPosition(0.73);
@@ -89,11 +75,10 @@ public class BlueSideAutonomous extends LinearOpMode {
                 .build()
         );
         drive.setMotorPowers(0.6,-0.6,0.6,-0.6);
-        sleep(150);
+        sleep(250);
         drive.setMotorPowers(0.6,0.6,0.6,0.6);
         sleep(200);
 
-        /*
         if(pos == DetectionTest.SkystoneDeterminationPipeline.SkystonePosition.THREE){
             drive.setMotorPowers(0.6,-0.6,0.6,-0.6); //strafe left
             sleep(600);
@@ -103,11 +88,9 @@ public class BlueSideAutonomous extends LinearOpMode {
             sleep(600);
             drive.setMotorPowers(0,0,0,0);
         }
-        else
-        {
+        else {
             stop();
         }
-         */
 
     }
 
@@ -154,7 +137,7 @@ public class BlueSideAutonomous extends LinearOpMode {
         sleep(500);
     }
 
-    public void scoreconeOld(SampleMecanumDrive drive) //lift vertical slides up
+    public void scorecone(SampleMecanumDrive drive) //lift vertical slides up
     {
         while(drive.config.leftVerticalSlide.getCurrentPosition() <= 2300){//-2350
             drive.config.leftVerticalSlide.setPower(1);
@@ -201,76 +184,6 @@ public class BlueSideAutonomous extends LinearOpMode {
         drive.config.leftPivot.setPosition(0.5);
         sleep(1000);
     }
-
-    public void scorecone(int iter, SampleMecanumDrive drive) { //extend slides to get cone
-        double angle;
-        boolean horizontal = false;
-        boolean vertical = false;
-        boolean height = true;
-
-        int ticks = 2300;
-        if (iter == 1) {
-            angle = .33;
-            ticks = 2250;
-        } else if (iter == 2) {
-            angle = .33;
-            ticks = 2200;
-        } else if (iter == 3) {
-            angle = .3;
-            ticks = 2150;
-        } else if (iter == 4) {
-            angle = .28;
-            ticks = 2100;
-        } else {
-            angle = .5;
-        }
-        //pivot the claw
-        drive.config.rightPivot.setPosition(1 - angle); //set pivots on forward positions
-        drive.config.leftPivot.setPosition(angle);
-        drive.config.claw.setPosition(0.4); //open claw
-        sleep(500);
-
-        //horizontal
-        drive.config.intakeDrawerSlideLeft.setPower(1); //extend drawer slides out
-        drive.config.intakeDrawerSlideRight.setPower(1);
-
-        //vert
-        drive.config.leftVerticalSlide.setPower(1);
-        drive.config.rightVerticalSlide.setPower(1);
-        while (true) {
-            if ((horizontal && vertical) || gamepad2.left_bumper ) {
-                drive.config.leftVerticalSlide.setPower(0);
-                drive.config.rightVerticalSlide.setPower(0);
-                drive.config.intakeDrawerSlideLeft.setPower(0); //extend drawer slides out
-                drive.config.intakeDrawerSlideRight.setPower(0);
-                break;
-            }
-            if (drive.config.intakeDrawerSlideLeft.getCurrentPosition() >= ticks || drive.config.intakeDrawerSlideRight.getCurrentPosition() >= ticks) {
-                horizontal = true;
-                drive.config.intakeDrawerSlideLeft.setPower(0); //stop extending
-                drive.config.intakeDrawerSlideRight.setPower(0);
-                drive.config.claw.setPosition(0.85); //close the claw to grab cone
-                sleep(500);
-                drive.config.rightPivot.setPosition(0.5);
-                drive.config.leftPivot.setPosition(0.5);
-                sleep(1000);
-            }
-            if (drive.config.leftVerticalSlide.getCurrentPosition() >= 2300 && height) {
-                height = false;
-                drive.config.leftVerticalSlide.setPower(-1);
-                drive.config.rightVerticalSlide.setPower(-1);
-            }
-            if(!height && drive.config.leftVerticalSlide.getCurrentPosition() <= 0)
-            {
-                drive.config.leftVerticalSlide.setPower(0); //pull in
-                drive.config.rightVerticalSlide.setPower(0);
-                vertical = true;
-            }
-            telemetry.addData("boolean vars", vertical + ", " + horizontal + ", " + height);
-            telemetry.update();
-        }
-    }
-
 
 
 }

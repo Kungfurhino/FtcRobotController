@@ -67,6 +67,7 @@ public class powerPlayConfiguration {
             rightPivot = hwMap.get(Servo.class, "rightPivot");
             leftPivot = hwMap.get(Servo.class, "leftPivot");
 
+
             imu = hardwareMap.get(BNO055IMU.class, "imu");
 
             BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
