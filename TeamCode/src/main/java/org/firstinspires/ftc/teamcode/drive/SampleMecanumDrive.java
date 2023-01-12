@@ -27,14 +27,21 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceRunner;
 import org.firstinspires.ftc.teamcode.util.LynxModuleUtil;
+import org.firstinspires.ftc.teamcode.util.SleepUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ACCEL;
 import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ANG_ACCEL;
@@ -76,6 +83,9 @@ public class SampleMecanumDrive extends MecanumDrive {
     private VoltageSensor batteryVoltageSensor;
 
     public powerPlayConfiguration config;
+
+    public SleepUtils SleepUtils = new SleepUtils();
+    Telemetry telemetry;
 
     public SampleMecanumDrive(HardwareMap hardwareMap) {
         super(kV, kA, kStatic, TRACK_WIDTH, TRACK_WIDTH, LATERAL_MULTIPLIER);
@@ -334,10 +344,113 @@ public class SampleMecanumDrive extends MecanumDrive {
     }
 
 
-    public void zeroAllMotors(){
+    public void stop(){
         config.zeroMotors();
     }
     public void zeroAllServos(){
         config.zeroServos();
+    }
+
+    public void goBackwardOdometers(int targetTicks, float power, Telemetry telemetry1){
+        this.telemetry = telemetry1;
+       while (rightFront.getCurrentPosition() > targetTicks) {
+            telemetry.addData("Encoders: ", "Right: " + rightFront.getCurrentPosition() + " Left: " + leftFront.getCurrentPosition());
+            telemetry.update();
+            PIDBackward(power, 100);
+        }
+        setMotorPowers(0.5, 0.5, 0.5, 0.5);
+        SleepUtils.sleep(250);
+        stop();
+    }
+
+    public void PIDBackward(float power, double deviatingValue){
+        double adjustPower = 0.2;
+        if (rightFront.getCurrentPosition() + leftFront.getCurrentPosition() <= deviatingValue || rightFront.getCurrentPosition() + leftFront.getCurrentPosition() >= -1 * deviatingValue) {
+            leftFront.setPower(-power);
+            rightFront.setPower(-power); // because motor is on the opposite side
+            leftRear.setPower(-power);
+            rightRear.setPower(-power);
+
+        } else if (-1 * rightFront.getCurrentPosition() - leftFront.getCurrentPosition() > deviatingValue) { //if turn right too much
+            leftFront.setPower(-power + (adjustPower));
+            rightFront.setPower(-power); // because motor is on the opposite side
+            leftRear.setPower(-power + (adjustPower));
+            rightRear.setPower(-power);
+            telemetry.addData("adjusting right" , " now");
+            telemetry.update();
+
+        } else if (leftFront.getCurrentPosition() + rightFront.getCurrentPosition() <  deviatingValue) { // if turn left too much
+            leftFront.setPower(-power);
+            rightFront.setPower(-power + (adjustPower)); // because motor is on the opposite side
+            leftRear.setPower(-power);
+            rightRear.setPower(-power + (adjustPower));
+            telemetry.addData("adjusting left" , " now");
+            telemetry.update();
+        }
+    }
+
+    public void rotateLeftWithGyro(float power, float angleInDegrees) {
+        leftFront.setPower(-power);
+        rightFront.setPower(power);
+        leftRear.setPower(-power);
+        rightRear.setPower(power);
+
+        while(true) {
+            Orientation angle = readAngles();
+            String rawYawAngle = formatAngle(AngleUnit.DEGREES, angle.firstAngle);
+            float yawAngle = Float.parseFloat(rawYawAngle);
+
+            if(yawAngle >= angleInDegrees) {
+                stop();
+                break;
+            }
+        }
+        stop();
+    }
+
+    public void rotateRightWithGyro(float power, float angleInDegrees) {
+
+        leftFront.setPower(power);
+        rightFront.setPower(-power);
+        leftRear.setPower(power);
+        rightRear.setPower(-power);
+
+        while(true) {
+
+            Orientation angle = readAngles();
+            String rawYawAngle = formatAngle(AngleUnit.DEGREES, angle.firstAngle);
+            float yawAngle = Float.parseFloat(rawYawAngle);
+
+            if(yawAngle <= angleInDegrees) {
+                stop();
+                break;
+            }
+        }
+        stop();
+    }
+
+    public void armUp(){
+        config.rightPivot.setPosition(0.245);
+        config.leftPivot.setPosition(0.755);
+    }
+
+    public void armDown(){
+        config.rightPivot.setPosition(0.75);//8
+        config.leftPivot.setPosition(0.25);//2
+    }
+
+    public Orientation readAngles()
+    {
+        return imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+    }
+
+    String formatAngle(AngleUnit angleUnit, double angle)
+    {
+        return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit, angle));
+    }
+
+    String formatDegrees(double degrees)
+    {
+        return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
     }
 }

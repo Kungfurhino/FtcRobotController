@@ -22,7 +22,10 @@ public class EndcoderTesting extends LinearOpMode {
     private int verticalLiftTicks;
     private int drawerSlidesTicks;
     private int initialDrawerTicks = 0;
+    private int alignNum = 0;
     private int initialVerticalTicks = 0;
+    private double leftServo;
+    private double rightServo;
 
     State currentState = State.IDLE;
 
@@ -35,6 +38,8 @@ public class EndcoderTesting extends LinearOpMode {
         robot.leftFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robot.rightRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.rightRear.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        robot.rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robot.config.intakeDrawerSlideRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.config.intakeDrawerSlideRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robot.config.intakeDrawerSlideLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -68,8 +73,8 @@ public class EndcoderTesting extends LinearOpMode {
                 case PULL_IN_SLIDES:
                     robot.config.rightPivot.setPosition(0.5);
                     robot.config.leftPivot.setPosition(0.5);
-                    robot.config.intakeDrawerSlideRight.setPower(-1);
-                    robot.config.intakeDrawerSlideLeft.setPower(-1);
+                    robot.config.intakeDrawerSlideRight.setPower(-0.5);
+                    robot.config.intakeDrawerSlideLeft.setPower(-0.5);
                     if(robot.config.intakeDrawerSlideLeft.getCurrentPosition() <= initialDrawerTicks){
                         initialDrawerTicks = robot.config.intakeDrawerSlideLeft.getCurrentPosition();
                         robot.config.rightPivot.setPosition(0.22);
@@ -79,11 +84,11 @@ public class EndcoderTesting extends LinearOpMode {
                     }
                     break;
                 case DROP_CONE:
-                    if(System.currentTimeMillis() - currentTime >= 1200){
+                    if(System.currentTimeMillis() - currentTime >= 900){
                         robot.config.claw.setPosition(0.6);
                         if(System.currentTimeMillis() - currentTime >= 1500 ){
-                            robot.config.rightPivot.setPosition(0.8);
-                            robot.config.leftPivot.setPosition(0.2);
+                            robot.config.rightPivot.setPosition(0.75);
+                            robot.config.leftPivot.setPosition(0.25);
                             currentState = State.IDLE;
                         }
                     }
@@ -109,6 +114,8 @@ public class EndcoderTesting extends LinearOpMode {
                     currentTime = System.currentTimeMillis();
                     drawerSlidesTicks = robot.config.intakeDrawerSlideLeft.getCurrentPosition();
                     verticalLiftTicks = robot.config.leftVerticalSlide.getCurrentPosition();
+                    rightServo = robot.config.rightPivot.getPosition();
+                    leftServo = robot.config.leftPivot.getPosition();
                     break;
             }
             if (-gamepad2.left_stick_y != 0) {
@@ -129,12 +136,10 @@ public class EndcoderTesting extends LinearOpMode {
                 robot.config.rightVerticalSlide.setPower(0);
             }
             if (gamepad2.dpad_left) { //up
-                robot.config.rightPivot.setPosition(0.245);
-                robot.config.leftPivot.setPosition(0.755);
+                robot.armUp();
             }
             if (gamepad2.dpad_right) { // down
-                robot.config.rightPivot.setPosition(0.75);//8
-                robot.config.leftPivot.setPosition(0.25);//2
+                robot.armDown();
             }
             if (gamepad2.b) {
                 robot.config.claw.setPosition(0.6);
@@ -148,11 +153,30 @@ public class EndcoderTesting extends LinearOpMode {
             if (gamepad2.dpad_up) {
                 currentState = State.PULL_IN_SLIDES;
             }
-            //if(gamepad2.dpad_down){
-            //    currentState = State.DROP_CONE;
-            //}
+            if(gamepad2.a){
+                robot.config.rightPivot.setPosition(1 - 0.37); //set pivots on forward positions
+                robot.config.leftPivot.setPosition(0.37);
+            }
+            if(gamepad2.y){
+                robot.config.rightPivot.setPosition(1 - 0.35); //set pivots on forward positions
+                robot.config.leftPivot.setPosition(0.35);
+            }
+            if(gamepad2.left_trigger != 0){
+                robot.config.rightPivot.setPosition(1 - 0.33); //set pivots on forward positions
+                robot.config.leftPivot.setPosition(0.33);
+            }
+            if(gamepad2.right_trigger != 0){
+                robot.config.rightPivot.setPosition(1 - 0.28); //set pivots on forward positions
+                robot.config.leftPivot.setPosition(0.28);
+            }
             if(gamepad1.left_trigger != 0){
                 currentState = State.RAISE_VERT;
+            }
+            if(gamepad1.a){
+                robot.config.alignmentTool.setPosition(0.5);
+            }
+            if(gamepad1.y){
+                robot.config.alignmentTool.setPosition(0.85);
             }
             if(gamepad2.left_bumper){
                 currentState = State.IDLE;
@@ -166,7 +190,7 @@ public class EndcoderTesting extends LinearOpMode {
             );
             telemetry.addData("rightRear", robot.rightRear.getCurrentPosition());
             telemetry.addData("leftFront", robot.leftFront.getCurrentPosition());
-            telemetry.addData("leftRear", robot.leftRear.getCurrentPosition());
+            telemetry.addData("Rightfront", robot.rightFront.getCurrentPosition());
             telemetry.addData("Right Vertical Slide", robot.config.rightVerticalSlide.getCurrentPosition());
             telemetry.addData("Left Vertical Slide", robot.config.leftVerticalSlide.getCurrentPosition());
             telemetry.addData("Intake Drawer slides", robot.config.intakeDrawerSlideRight.getCurrentPosition() + ", " + robot.config.intakeDrawerSlideLeft.getCurrentPosition());

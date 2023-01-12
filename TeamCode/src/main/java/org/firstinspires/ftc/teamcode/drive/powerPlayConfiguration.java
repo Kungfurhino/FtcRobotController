@@ -35,6 +35,8 @@ public class powerPlayConfiguration {
         public Servo leftPivot;
         public Servo rightPivot;
 
+        public Servo alignmentTool;
+
         HardwareMap hwMap           =  null;
 
         public BNO055IMU imu;
@@ -67,6 +69,7 @@ public class powerPlayConfiguration {
             rightPivot = hwMap.get(Servo.class, "rightPivot");
             leftPivot = hwMap.get(Servo.class, "leftPivot");
 
+            alignmentTool = hwMap.get(Servo.class, "alignmentPivot");
 
             imu = hardwareMap.get(BNO055IMU.class, "imu");
 
@@ -82,10 +85,10 @@ public class powerPlayConfiguration {
         }
 
         public void zeroMotors(){
-            rightVerticalSlide.setPower(0);
-            leftVerticalSlide.setPower(0);
-            intakeDrawerSlideLeft.setPower(0);
-            intakeDrawerSlideRight.setPower(0);
+            leftFront.setPower(0);
+            leftRear.setPower(0);
+            rightFront.setPower(0);
+            rightRear.setPower(0);
         }
 
         public void zeroServos(){

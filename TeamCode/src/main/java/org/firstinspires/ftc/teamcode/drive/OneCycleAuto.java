@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.detection.DetectionTest;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
 
 @Autonomous
-public class PreLoadAuto extends LinearOpMode {
+public class OneCycleAuto extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -60,11 +60,13 @@ public class PreLoadAuto extends LinearOpMode {
         }
         telemetry.addData("position", pos.toString());
 
-        drive.followTrajectorySequence(drive.trajectorySequenceBuilder(new Pose2d(35, 58, Math.toRadians(90)))
-                .back(52.5)
-                .turn(Math.toRadians(-76))
-                .build()
-        );
+        drive.goBackwardOdometers(-80000, (float)0.6, telemetry);
+        drive.setMotorPowers(0.5,0.5,0.5,0.5);
+        sleep(200);
+        drive.setMotorPowers(0,0,0,0);
+        sleep(200);
+        drive.rotateRightWithGyro((float)0.5, -76);
+
         drive.setMotorPowers(0.6,-0.6,0.6,-0.6);
         sleep(320);
         //drive.setMotorPowers(0.4,0.4,0.4,0.4);
@@ -120,10 +122,11 @@ public class PreLoadAuto extends LinearOpMode {
 
     public void scorecone(SampleMecanumDrive drive) //lift vertical slides up
     {
-        while(drive.config.leftVerticalSlide.getCurrentPosition() <= 2550){//-2350
+        while(drive.config.leftVerticalSlide.getCurrentPosition() <= 2600){//-2350
             drive.config.leftVerticalSlide.setPower(1);
             drive.config.rightVerticalSlide.setPower(1);
         }
     }
+
 }
 
