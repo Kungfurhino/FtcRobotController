@@ -127,7 +127,7 @@ public class JoystickRecorder {
     }
 
     public void playSamplesWithTicks(SampleMecanumDrive drive, int ticks) throws InterruptedException {
-        if (ticks < drive.rightRear.getCurrentPosition()) {
+        if (ticks < drive.leftFront.getCurrentPosition()) {
             for (int i = 0; i < samples.size(); i++) {
                 double throttle = samples.get(i).get(2);
                 double direction = samples.get(i).get(0);
@@ -146,8 +146,8 @@ public class JoystickRecorder {
                 drive.setMotorPowers(FL, BL, BR, FR);
                 Thread.sleep(collectIntervalMillis);
 
-                if (drive.rightRear.getCurrentPosition() < ticks) {
-                    telemetry.addData("Current Position: ", drive.rightRear.getCurrentPosition());
+                if (drive.leftFront.getCurrentPosition() < ticks) {
+                    telemetry.addData("Current Position: ", drive.leftFront.getCurrentPosition());
                     drive.setMotorPowers(0, 0, 0, 0);
                     return;
                 }
@@ -171,8 +171,8 @@ public class JoystickRecorder {
                 drive.setMotorPowers(FL, BL, BR, FR);
                 Thread.sleep(collectIntervalMillis);
 
-                if (drive.rightRear.getCurrentPosition() > ticks) {
-                    telemetry.addData("Current Position: ", drive.rightRear.getCurrentPosition());
+                if (drive.leftFront.getCurrentPosition() > ticks) {
+                    telemetry.addData("Current Position: ", drive.leftFront.getCurrentPosition());
                     drive.setMotorPowers(0, 0, 0, 0);
                     return;
                 }

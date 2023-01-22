@@ -32,10 +32,10 @@ public class JoystickTeleopRecorder extends LinearOpMode {
             double BR = throttle + direction - strafe;
             double BL = -throttle + direction + strafe;
 
-            FR = Range.clip(FR, -0.6, 0.6);
-            FL = Range.clip(FL, -0.6, 0.6);
-            BR = Range.clip(BR, -0.6, 0.6);
-            BL = Range.clip(BL, -0.6, 0.6);
+            FR = Range.clip(FR, -0.7, 0.7);
+            FL = Range.clip(FL, -0.7, 0.7);
+            BR = Range.clip(BR, -0.7, 0.7);
+            BL = Range.clip(BL, -0.7, 0.7);
 
             drive.setMotorPowers(FL, BL, BR, FR);
             recorder.collectSample(Arrays.asList(direction, strafe, throttle));

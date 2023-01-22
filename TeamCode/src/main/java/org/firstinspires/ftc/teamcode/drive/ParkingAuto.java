@@ -55,7 +55,7 @@ public class ParkingAuto extends LinearOpMode {
                 telemetry.addData("Right Rear", robot.rightRear.getCurrentPosition());
             }
         }else if(position == DetectionTest.SkystoneDeterminationPipeline.SkystonePosition.ONE){
-            while(robot.rightRear.getCurrentPosition() > -44400){ //strafing left
+            while(robot.rightRear.getCurrentPosition() > -41000){ //strafing left
                 robot.setMotorPowers(0.5, -0.5, 0.5, -0.5);
                 telemetry.addData("Right Rear", robot.rightRear.getCurrentPosition());
             }

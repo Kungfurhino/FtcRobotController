@@ -24,6 +24,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
@@ -167,7 +168,7 @@ public class SampleMecanumDrive extends MecanumDrive {
         // TODO: if desired, use setLocalizer() to change the localization method
         // for instance, setLocalizer(new ThreeTrackingWheelLocalizer(...));
 
-        setLocalizer(new StandardTrackingWheelLocalizer(hardwareMap));
+        //setLocalizer(new StandardTrackingWheelLocalizer(hardwareMap));
 
         trajectorySequenceRunner = new TrajectorySequenceRunner(follower, HEADING_PID);
     }
@@ -430,13 +431,22 @@ public class SampleMecanumDrive extends MecanumDrive {
     }
 
     public void armUp(){
-        config.rightPivot.setPosition(0.245);
-        config.leftPivot.setPosition(0.755);
+        config.rightPivot.setPosition(0.6917);//8
+        config.leftPivot.setPosition(0.307);//2
     }
 
     public void armDown(){
-        config.rightPivot.setPosition(0.75);//8
-        config.leftPivot.setPosition(0.25);//2
+        config.rightPivot.setPosition(0.231);
+        config.leftPivot.setPosition(0.767);
+    }
+
+    public void closeClaw(){
+        config.claw.setPosition(0.8);
+    }
+
+    public void openClaw(){
+        //config.claw.setPosition(0.7); slight open
+        config.claw.setPosition(0.5);
     }
 
     public Orientation readAngles()

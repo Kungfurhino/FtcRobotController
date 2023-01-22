@@ -2,11 +2,15 @@ package org.firstinspires.ftc.teamcode.drive;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.teamcode.util.AxesSigns;
@@ -32,8 +36,9 @@ public class powerPlayConfiguration {
         public DcMotorEx intakeDrawerSlideLeft;
 
         public Servo claw;
-        public Servo leftPivot;
-        public Servo rightPivot;
+        public ServoImplEx leftPivot;
+        public ServoImplEx rightPivot;
+        public DistanceSensor distanceSensor;
 
         public Servo alignmentTool;
 
@@ -66,10 +71,14 @@ public class powerPlayConfiguration {
 
             claw = hwMap.get(Servo.class, "claw");
 
-            rightPivot = hwMap.get(Servo.class, "rightPivot");
-            leftPivot = hwMap.get(Servo.class, "leftPivot");
+            rightPivot = hwMap.get(ServoImplEx.class, "rightPivot");
+            leftPivot = hwMap.get(ServoImplEx.class, "leftPivot");
+            rightPivot.setPwmRange(new PwmControl.PwmRange(500, 2500));
+            leftPivot.setPwmRange(new PwmControl.PwmRange(500, 2500));
 
             alignmentTool = hwMap.get(Servo.class, "alignmentPivot");
+
+            distanceSensor = hwMap.get(DistanceSensor.class, "distanceSensor");
 
             imu = hardwareMap.get(BNO055IMU.class, "imu");
 
