@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
@@ -32,8 +33,7 @@ public class EndcoderTesting extends LinearOpMode {
     private double leftServo;
     private double rightServo;
     private boolean auto = false;
-    private double positionLeft;
-    private double positionRight;
+    private boolean slowDrive = false;
 
     State currentState = State.IDLE;
 
@@ -103,11 +103,11 @@ public class EndcoderTesting extends LinearOpMode {
                     currentState = State.DROP_CONE;
                     break;
                 case DROP_CONE:
-                    if(System.currentTimeMillis() - currentTime >= 700){
+                    if(System.currentTimeMillis() - currentTime >= 500){
                         robot.config.claw.setPosition(0.68);//slight open
-                        if(System.currentTimeMillis() - currentTime >= 1000 ){
+                        if(System.currentTimeMillis() - currentTime >= 800 ){
                             robot.armDown();
-                            if(System.currentTimeMillis() - currentTime >= 1400){
+                            if(System.currentTimeMillis() - currentTime >= 1050){
                                 robot.openClaw();
                                 if(auto){
                                     if(System.currentTimeMillis() - currentTime >= 1900){
@@ -215,6 +215,19 @@ public class EndcoderTesting extends LinearOpMode {
             if(gamepad2.left_bumper){
                 currentState = State.IDLE;
             }
+            if(gamepad1.b){
+                if(slowDrive){
+                    slowDrive = false;
+                }else{
+                    slowDrive = true;
+                }
+            }
+            if(slowDrive){
+                mecanumDrive(robot, 0.5);
+            }else{
+                mecanumDrive(robot, 1);
+            }
+            /*
             robot.setWeightedDrivePower(
                     new Pose2d(
                             -gamepad1.left_stick_y,
@@ -222,6 +235,10 @@ public class EndcoderTesting extends LinearOpMode {
                             -gamepad1.right_stick_x
                     )
             );
+             */
+            telemetry.addData("front distance", robot.config.distanceSensor.getDistance(DistanceUnit.MM));
+            telemetry.addData("side distance", robot.config.backSensor.getDistance(DistanceUnit.MM));
+            telemetry.addData("back distance", robot.config.sideSensor.getDistance(DistanceUnit.MM));
             telemetry.addData("rightRear", robot.rightRear.getCurrentPosition());
             telemetry.addData("leftFront", robot.leftFront.getCurrentPosition());
             telemetry.addData("Rightfront", robot.rightFront.getCurrentPosition());
@@ -230,7 +247,6 @@ public class EndcoderTesting extends LinearOpMode {
             telemetry.addData("Intake Drawer slides", robot.config.intakeDrawerSlideRight.getCurrentPosition() + ", " + robot.config.intakeDrawerSlideLeft.getCurrentPosition());
             telemetry.addData("Initial Ticks", initialDrawerTicks);
             telemetry.addData("right servo", rightServo + ", left servo: " + leftServo);
-            telemetry.addData("distance", robot.config.distanceSensor.getDistance(DistanceUnit.MM));
             telemetry.update();
             robot.update();
         }
@@ -238,5 +254,23 @@ public class EndcoderTesting extends LinearOpMode {
 
     public double map(double x, double in_min, double in_max, double out_min, double out_max){
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    }
+
+    public void mecanumDrive(SampleMecanumDrive drive, double multiplier){
+        double throttle = -gamepad1.right_stick_x;
+        double direction = -gamepad1.left_stick_y;
+        double strafe = -gamepad1.left_stick_x;
+
+        double FR = throttle + direction + strafe;
+        double FL = -throttle + direction - strafe;
+        double BR = throttle + direction - strafe;
+        double BL = -throttle + direction + strafe;
+
+        FR = Range.clip(FR, -1, 1);
+        FL = Range.clip(FL, -1, 1);
+        BR = Range.clip(BR, -1, 1);
+        BL = Range.clip(BL, -1, 1);
+
+        drive.setMotorPowers(FL * multiplier, BL * multiplier, BR * multiplier, FR * multiplier);
     }
 }

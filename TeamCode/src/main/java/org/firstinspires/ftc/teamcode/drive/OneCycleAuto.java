@@ -54,7 +54,7 @@ public class OneCycleAuto extends LinearOpMode {
         waitForStart();
 
         if (isStopRequested()) return;
-
+        /*
         pos = detector.Detect();
         time = System.currentTimeMillis();
         while(pos == null){
@@ -67,25 +67,37 @@ public class OneCycleAuto extends LinearOpMode {
         }
         telemetry.addData("position", pos.toString());
 
-        slowBack.playSamplesWithTicks(drive, 101000);
-        drive.setMotorPowers(-0.3, -0.2,-0.2, -0.3);
+         */
+
+        //slowBack.playSamplesWithTicks(drive, 100000);
+        while(drive.config.sideSensor.getDistance(DistanceUnit.MM) > 800){
+            drive.setMotorPowers(0.3, 0.3, -0.3, -0.3);
+            telemetry.addData("Distance: ", drive.config.sideSensor.getDistance(DistanceUnit.MM));
+            telemetry.update();
+        }
+        sleep(5000);
+        //drive.rotateRightWithGyro((float)0.25, -70);//62
+        drive.setMotorPowers(-0.2, -0.2,-0.2, -0.2);
         sleep(450);
-        drive.rotateRightWithGyro((float)0.25, -70);//62
+        drive.setMotorPowers(0,0,0,0);
+        sleep(5000);
+        //telemetry.addData("Going back", " now");
+        //telemetry.update();
         drive.rightRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         drive.rightRear.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         strafeWithDistance(100, drive);
         drive.setMotorPowers(0,0,0,0);
-        backwardWithDistance(85, drive);
+        sleep(3000);
+        backwardWithDistance(82, drive);
         drive.setMotorPowers(0,0,0,0);
-        sleep(500);
-
-        getoff(drive);
-        scorecone(drive);
-        sleep(200);
-        pullverticalslides(drive);
-
+        rotateWithBackSensor(500, drive);
 
         /*
+        getoff(drive);
+        scorecone(drive);
+        sleep(300);
+        pullverticalslides(drive);
+
         whileLoopScore(0, drive);
         whileLoopScore(1, drive);
         whileLoopScore(2, drive);
@@ -94,8 +106,6 @@ public class OneCycleAuto extends LinearOpMode {
         scorecone(drive);
         pullverticalslides(drive);
         sleep(500);
-
-         */
 
         drive.rotateRightWithGyro((float) 0.5, -81);//rotate back to perpendicular
         drive.rightRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -123,12 +133,14 @@ public class OneCycleAuto extends LinearOpMode {
             sleep(1000);
             stop();
         }
+
+         */
     }
 
     public void pullverticalslides(SampleMecanumDrive drive) { //pull vertical slides in
         while(drive.config.leftVerticalSlide.getCurrentPosition() >= 0){
-            drive.config.leftVerticalSlide.setPower(-0.7); //pull in
-            drive.config.rightVerticalSlide.setPower(-0.7);
+            drive.config.leftVerticalSlide.setPower(-0.6); //pull in
+            drive.config.rightVerticalSlide.setPower(-0.6);
         }
         drive.config.leftVerticalSlide.setPower(0);
         drive.config.rightVerticalSlide.setPower(0);
@@ -144,8 +156,8 @@ public class OneCycleAuto extends LinearOpMode {
     public void scorecone(SampleMecanumDrive drive) //lift vertical slides up
     {
         while(drive.config.leftVerticalSlide.getCurrentPosition() <= 2600){//-2350
-            drive.config.leftVerticalSlide.setPower(0.65);
-            drive.config.rightVerticalSlide.setPower(0.65);
+            drive.config.leftVerticalSlide.setPower(0.6);
+            drive.config.rightVerticalSlide.setPower(0.6);
         }
     }
 
@@ -262,6 +274,28 @@ public class OneCycleAuto extends LinearOpMode {
                 drive.setMotorPowers(0.2, 0.2, 0.2, 0.2);
             }
         }
+        drive.setMotorPowers(0,0,0,0);
+    }
+    public void rotateWithDistance(int millimeters, SampleMecanumDrive drive){
+        if(drive.config.sideSensor.getDistance(DistanceUnit.MM) > millimeters){
+            while(drive.config.sideSensor.getDistance(DistanceUnit.MM) > millimeters){
+                drive.setMotorPowers(0.3, 0.3, -0.3, -0.3);
+                telemetry.addData("Distance: ", drive.config.sideSensor.getDistance(DistanceUnit.MM));
+                telemetry.update();
+            }
+        }
+        drive.setMotorPowers(0,0,0,0);
+    }
+
+    public void rotateWithBackSensor(int millimeters, SampleMecanumDrive drive){
+        if(drive.config.backSensor.getDistance(DistanceUnit.MM) > millimeters){
+            while(drive.config.backSensor.getDistance(DistanceUnit.MM) > millimeters){
+                drive.setMotorPowers(0.2, 0.2, -0.2, -0.2);
+                telemetry.addData("Distance: ", drive.config.backSensor.getDistance(DistanceUnit.MM));
+                telemetry.update();
+            }
+        }
+        drive.setMotorPowers(0,0,0,0);
     }
 }
 

@@ -39,6 +39,8 @@ public class powerPlayConfiguration {
         public ServoImplEx leftPivot;
         public ServoImplEx rightPivot;
         public DistanceSensor distanceSensor;
+        public DistanceSensor backSensor;
+        public DistanceSensor sideSensor;
 
         public Servo alignmentTool;
 
@@ -79,6 +81,8 @@ public class powerPlayConfiguration {
             alignmentTool = hwMap.get(Servo.class, "alignmentPivot");
 
             distanceSensor = hwMap.get(DistanceSensor.class, "distanceSensor");
+            backSensor = hwMap.get(DistanceSensor.class, "backSensor");
+            sideSensor = hwMap.get(DistanceSensor.class, "sideSensor");
 
             imu = hardwareMap.get(BNO055IMU.class, "imu");
 
