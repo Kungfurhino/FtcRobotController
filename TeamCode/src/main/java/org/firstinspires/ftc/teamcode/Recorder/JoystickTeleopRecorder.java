@@ -18,7 +18,7 @@ public class JoystickTeleopRecorder extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-        JoystickRecorder recorder = new JoystickRecorder("SlowBack" + ".txt", telemetry);
+        JoystickRecorder recorder = new JoystickRecorder("SlowBackNew" + ".txt", telemetry);
 
         waitForStart();
         recorder.start();

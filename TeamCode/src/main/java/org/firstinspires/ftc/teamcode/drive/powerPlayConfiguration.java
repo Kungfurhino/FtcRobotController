@@ -1,16 +1,22 @@
 package org.firstinspires.ftc.teamcode.drive;
 
+import android.graphics.Color;
+
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.ColorRangeSensor;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.teamcode.util.AxesSigns;
@@ -40,7 +46,9 @@ public class powerPlayConfiguration {
         public ServoImplEx rightPivot;
         public DistanceSensor distanceSensor;
         public DistanceSensor backSensor;
-        public DistanceSensor sideSensor;
+        public ColorRangeSensor clawSensor;
+        public TouchSensor magnet;
+
 
         public Servo alignmentTool;
 
@@ -82,7 +90,9 @@ public class powerPlayConfiguration {
 
             distanceSensor = hwMap.get(DistanceSensor.class, "distanceSensor");
             backSensor = hwMap.get(DistanceSensor.class, "backSensor");
-            sideSensor = hwMap.get(DistanceSensor.class, "sideSensor");
+            clawSensor = hwMap.get(ColorRangeSensor.class, "clawSensor");
+            magnet = hwMap.get(TouchSensor.class, "magnet");
+
 
             imu = hardwareMap.get(BNO055IMU.class, "imu");
 

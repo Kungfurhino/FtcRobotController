@@ -32,6 +32,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
@@ -430,14 +431,44 @@ public class SampleMecanumDrive extends MecanumDrive {
         stop();
     }
 
+    public void rotateRightWithGyroColor(float power, float angleInDegrees) {
+
+        Orientation initialAngle = readAngles();
+        float initAngle = Float.parseFloat(formatAngle(AngleUnit.DEGREES, initialAngle.firstAngle));
+
+        leftFront.setPower(power);
+        rightFront.setPower(-power);
+        leftRear.setPower(power);
+        rightRear.setPower(-power);
+
+        while(true) {
+
+            Orientation angle = readAngles();
+            String rawYawAngle = formatAngle(AngleUnit.DEGREES, angle.firstAngle);
+            float yawAngle = Float.parseFloat(rawYawAngle);
+
+            if(yawAngle - initAngle <= angleInDegrees || config.clawSensor.red() >= 60 || config.clawSensor.blue() >= 60) {
+                stop();
+                break;
+            }
+        }
+        stop();
+
+    }
+
     public void armUp(){
-        config.rightPivot.setPosition(0.6917);//8
-        config.leftPivot.setPosition(0.307);//2
+        config.rightPivot.setPosition(0.73);//8
+        config.leftPivot.setPosition(0.27);//2
     }
 
     public void armDown(){
-        config.rightPivot.setPosition(0.231);
-        config.leftPivot.setPosition(0.767);
+        config.rightPivot.setPosition(0.21);
+        config.leftPivot.setPosition(0.79);
+    }
+
+    public void ninetyDegreeArm(){
+        config.rightPivot.setPosition(0.52);
+        config.leftPivot.setPosition(0.48);
     }
 
     public void closeClaw(){
@@ -447,6 +478,47 @@ public class SampleMecanumDrive extends MecanumDrive {
     public void openClaw(){
         //config.claw.setPosition(0.7); slight open
         config.claw.setPosition(0.5);
+    }
+
+    public void slightOpen(){
+        config.claw.setPosition(0.64);
+    }
+
+    public void strafeWithDistance(int millimeters){
+        while(config.distanceSensor.getDistance(DistanceUnit.MM) > millimeters){
+            setMotorPowers(0.3, -0.3, 0.3, -0.3 );
+        }
+    }
+
+    public void backwardWithDistance(int milimeters){
+        if(config.distanceSensor.getDistance(DistanceUnit.MM) > milimeters){
+            while(config.distanceSensor.getDistance(DistanceUnit.MM) > milimeters){
+                setMotorPowers(-0.15, -0.15, -0.15, -0.15);
+            }
+        }else if(config.distanceSensor.getDistance(DistanceUnit.MM) < milimeters){
+            while(config.distanceSensor.getDistance(DistanceUnit.MM) < milimeters){
+                setMotorPowers(0.2, 0.2, 0.2, 0.2);
+            }
+        }
+        setMotorPowers(0,0,0,0);
+    }
+
+    public void rotateWithBackSensor(int millimeters){
+        if(config.backSensor.getDistance(DistanceUnit.MM) > millimeters){
+            while(config.backSensor.getDistance(DistanceUnit.MM) > millimeters){
+                setMotorPowers(0.3, 0.3, -0.3, -0.3);
+            }
+        }
+        setMotorPowers(0,0,0,0);
+    }
+
+    public void rotateWithBackSensorLeft(int millimeters){
+        if(config.backSensor.getDistance(DistanceUnit.MM) < millimeters){
+            while(config.backSensor.getDistance(DistanceUnit.MM) < millimeters){
+                setMotorPowers(-0.3, -0.3, 0.3, 0.3);
+            }
+        }
+        setMotorPowers(0,0,0,0);
     }
 
     public Orientation readAngles()
@@ -462,5 +534,15 @@ public class SampleMecanumDrive extends MecanumDrive {
     String formatDegrees(double degrees)
     {
         return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
+    }
+
+    public String getPitchAngle(){
+        Orientation angles = readAngles();
+        return formatAngle(AngleUnit.DEGREES, angles.thirdAngle);
+    }
+
+    public String getRollAngle(){
+        Orientation angles = readAngles();
+        return formatAngle(AngleUnit.DEGREES, angles.secondAngle);
     }
 }

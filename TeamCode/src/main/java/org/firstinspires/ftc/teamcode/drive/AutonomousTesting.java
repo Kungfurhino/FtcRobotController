@@ -19,11 +19,12 @@ public class AutonomousTesting extends LinearOpMode {
         robot.config.intakeDrawerSlideRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.config.intakeDrawerSlideRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robot.config.intakeDrawerSlideLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot  .config.intakeDrawerSlideLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        robot.config.intakeDrawerSlideLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         waitForStart();
 
         getcone(4, robot);
+
     }
 
     public void getcone(int iter, SampleMecanumDrive drive){ //extend slides to get cone
@@ -64,5 +65,12 @@ public class AutonomousTesting extends LinearOpMode {
         drive.config.rightPivot.setPosition(0.5);
         drive.config.leftPivot.setPosition(0.5);
         sleep(1000);
+        while(drive.config.intakeDrawerSlideLeft.getCurrentPosition() >= 0 && drive.config.intakeDrawerSlideRight.getCurrentPosition() >= 0)
+        {
+            drive.config.intakeDrawerSlideLeft.setPower(-0.4); //extend drawer slides out
+            drive.config.intakeDrawerSlideRight.setPower(-0.4);
+            telemetry.addData("ticks",  drive.config.intakeDrawerSlideLeft.getCurrentPosition() + ", " + drive.config.intakeDrawerSlideRight.getCurrentPosition());
+            telemetry.update();
+        }
     }
 }

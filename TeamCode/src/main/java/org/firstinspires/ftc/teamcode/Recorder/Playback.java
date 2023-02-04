@@ -21,7 +21,7 @@ public class Playback extends LinearOpMode {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
         //Make sure to change to file name to the path you want to test
-        JoystickRecorder recorder = new JoystickRecorder("SlowBack" + ".txt", telemetry);
+        JoystickRecorder recorder = new JoystickRecorder("SlowBackNew" + ".txt", telemetry);
 
         waitForStart();
 

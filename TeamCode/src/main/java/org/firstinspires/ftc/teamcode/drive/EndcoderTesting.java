@@ -18,11 +18,15 @@ public class EndcoderTesting extends LinearOpMode {
         SLOW_SERVO_DOWN,
         SlOW_SERVO_UP,
         PULL_IN_SLIDES,
+        MEDIUM_CYCLE,
+        MEDIUM_CYCLE_DOWN,
+        GRAB_CONE,
         PULL_IN_SLOW,
         RAISE_VERT,
         PULL_IN_VERT,
         DROP_CONE,
-        ARM_ONLY
+        ARM_ONLY,
+        PULL_DOWN_SLOW
     }
 
     private int verticalLiftTicks;
@@ -58,35 +62,54 @@ public class EndcoderTesting extends LinearOpMode {
         waitForStart();
         while(opModeIsActive() && !isStopRequested()) {
             switch (currentState) {
-                case SlOW_SERVO_UP:
-                    double progress = System.currentTimeMillis() - currentTime;
-                    double angleRight = map(progress, 0, 7000, 0.9, 0.2);
-                    double angleLeft = map(progress, 0, 7000, 0.1, 0.8);
-                    robot.config.rightPivot.setPosition(angleRight);
-                    robot.config.leftPivot.setPosition(angleLeft);
-                    if (progress >= 7000) {
-                        currentState = State.IDLE;
+                case SlOW_SERVO_UP://use motor ticks for progress and go from 1-0.3
+                    double progress = robot.config.leftVerticalSlide.getCurrentPosition();
+                    double powerRight = map(progress, 0, 2300, 1.0, 0.2);
+                    double powerLeft = map(progress, 0, 2300, 1.0, 0.2);
+                    robot.config.rightPivot.setPosition(powerRight);
+                    robot.config.leftPivot.setPosition(powerLeft);
+                    if (progress >= 2300) {
+                        robot.config.leftVerticalSlide.setPower(0);
+                        robot.config.rightVerticalSlide.setPower(0);
+                        currentState = State.SLOW_SERVO_DOWN;
                     }
                     break;
-                case SLOW_SERVO_DOWN:
-                    double timeProgress = System.currentTimeMillis() - currentTime;
-                    double right = map(timeProgress, 0, 7000, 0.25, 0.9);
-                    double left = map(timeProgress, 0, 7000, 0.75, 0.1);
+                case SLOW_SERVO_DOWN://use motor ticks for progress and go from 1-0.3
+                    double timeProgress = robot.config.leftVerticalSlide.getCurrentPosition();
+                    double right = map(timeProgress, 2300, 0, -1, 0.2);
+                    double left = map(timeProgress, 2300, 0, -1, 0.2);
                     robot.config.rightPivot.setPosition(right);
                     robot.config.leftPivot.setPosition(left);
                     if (timeProgress >= 7000) {
                         currentState = State.IDLE;
                     }
                     break;
+                case GRAB_CONE:
+                    robot.config.intakeDrawerSlideRight.setPower(0.4);
+                    robot.config.intakeDrawerSlideLeft.setPower(0.4);
+                    if(robot.config.clawSensor.blue() >= 110 || robot.config.clawSensor.red() >= 110){
+                        robot.closeClaw();
+                        sleep(200);
+                        robot.config.intakeDrawerSlideRight.setPower(0);
+                        robot.config.intakeDrawerSlideLeft.setPower(0);
+                        currentState = State.PULL_IN_SLIDES;
+                    }
+                    break;
                 case PULL_IN_SLIDES:
-                    robot.config.rightPivot.setPosition(0.5);
-                    robot.config.leftPivot.setPosition(0.5);
-                    robot.config.intakeDrawerSlideRight.setPower(-0.7);
-                    robot.config.intakeDrawerSlideLeft.setPower(-0.7);
-                    if(robot.config.intakeDrawerSlideLeft.getCurrentPosition() <= 100){
-                        robot.config.intakeDrawerSlideLeft.setPower(-0.1);
-                        robot.config.intakeDrawerSlideRight.setPower(-0.1);
-                        currentState = State.PULL_IN_SLOW;
+                    if(robot.config.leftVerticalSlide.getCurrentPosition() > 60){
+                        currentState = State.IDLE;
+                    }else{
+                        robot.config.rightPivot.setPosition(0.5);
+                        robot.config.leftPivot.setPosition(0.5);
+                        robot.config.intakeDrawerSlideRight.setPower(-0.7);
+                        robot.config.intakeDrawerSlideLeft.setPower(-0.7);
+                        if(robot.config.intakeDrawerSlideLeft.getCurrentPosition() <= 0){
+                            robot.config.intakeDrawerSlideLeft.setPower(0);
+                            robot.config.intakeDrawerSlideRight.setPower(0);
+                            robot.armUp();
+                            currentTime = System.currentTimeMillis();
+                            currentState = State.DROP_CONE;
+                        }
                     }
                     break;
                 case PULL_IN_SLOW:
@@ -104,30 +127,68 @@ public class EndcoderTesting extends LinearOpMode {
                     break;
                 case DROP_CONE:
                     if(System.currentTimeMillis() - currentTime >= 500){
-                        robot.config.claw.setPosition(0.68);//slight open
-                        if(System.currentTimeMillis() - currentTime >= 800 ){
+                        robot.slightOpen();
+                        if(auto){
+                            if(System.currentTimeMillis() - currentTime >= 800){
+                                //robot.config.rightPivot.setPosition(0.58);
+                                //robot.config.leftPivot.setPosition(0.42);
+                                auto = false;
+                                currentState = State.IDLE;
+                            }
+                        }else if(System.currentTimeMillis() - currentTime >= 800 ){
                             robot.armDown();
                             if(System.currentTimeMillis() - currentTime >= 1050){
                                 robot.openClaw();
-                                if(auto){
-                                    if(System.currentTimeMillis() - currentTime >= 1900){
-                                        currentState = State.RAISE_VERT;
-                                        auto = false;
-                                    }
-                                }else{
-                                    currentState = State.IDLE;
-                                }
+                                currentState = State.IDLE;
                             }
                         }
                     }
                     break;
                 case RAISE_VERT:
-                    robot.config.leftVerticalSlide.setPower(1);
-                    robot.config.rightVerticalSlide.setPower(1);
-                    if(robot.config.leftVerticalSlide.getCurrentPosition() >= 2350){//-2350
+                    if(robot.config.magnet.isPressed()){
+                        robot.config.leftVerticalSlide.setPower(0);
+                        robot.config.rightVerticalSlide.setPower(0);
+                        currentState = State.IDLE;
+                    }else{
+                        robot.config.leftVerticalSlide.setPower(1);
+                        robot.config.rightVerticalSlide.setPower(1);
+                    }
+                    if(robot.config.leftVerticalSlide.getCurrentPosition() >= 2275){//-2350
+                        currentTime = System.currentTimeMillis();
+                        currentState = State.PULL_DOWN_SLOW;
+                    }
+                    break;
+                case MEDIUM_CYCLE:
+                    if(robot.config.magnet.isPressed()){
+                        robot.config.leftVerticalSlide.setPower(0);
+                        robot.config.rightVerticalSlide.setPower(0);
+                        currentState = State.IDLE;
+                    }else{
+                        robot.config.leftVerticalSlide.setPower(1);
+                        robot.config.rightVerticalSlide.setPower(1);
+                    }
+                    if(robot.config.leftVerticalSlide.getCurrentPosition() >= 1704){
                         robot.config.leftVerticalSlide.setPower(-1);
                         robot.config.rightVerticalSlide.setPower(-1);
-                        currentState = State.PULL_IN_VERT;
+                        currentState = State.MEDIUM_CYCLE_DOWN;
+                    }
+                    break;
+                case MEDIUM_CYCLE_DOWN:
+                    robot.config.leftVerticalSlide.setPower(-1);
+                    robot.config.rightVerticalSlide.setPower(-1);
+                    if(robot.config.leftVerticalSlide.getCurrentPosition() <= 0){
+                        robot.config.leftVerticalSlide.setPower(0);
+                        robot.config.rightVerticalSlide.setPower(0);
+                        currentState = State.IDLE;
+                    }
+                    break;
+                case PULL_DOWN_SLOW:
+                    if(System.currentTimeMillis() - currentTime > 250){
+                        if(robot.config.leftVerticalSlide.getCurrentPosition() >= 2200){
+                            robot.config.leftVerticalSlide.setPower(-1);
+                            robot.config.rightVerticalSlide.setPower(-1);
+                            currentState = State.PULL_IN_VERT;
+                        }
                     }
                     break;
                 case PULL_IN_VERT:
@@ -144,12 +205,19 @@ public class EndcoderTesting extends LinearOpMode {
                     verticalLiftTicks = robot.config.leftVerticalSlide.getCurrentPosition();
                     rightServo = robot.config.rightPivot.getPosition();
                     leftServo = robot.config.leftPivot.getPosition();
+                    if(robot.config.leftVerticalSlide.getCurrentPosition() > 60 && robot.config.rightPivot.getPosition() > 0.6){
+                        robot.ninetyDegreeArm();
+                    }
+                    if(robot.config.magnet.isPressed()){
+                        robot.config.leftVerticalSlide.setPower(0);
+                        robot.config.rightVerticalSlide.setPower(0);
+                    }
                     break;
             }
             if (-gamepad2.left_stick_y != 0) {
                 robot.config.intakeDrawerSlideLeft.setPower(-gamepad2.left_stick_y);
                 robot.config.intakeDrawerSlideRight.setPower(-gamepad2.left_stick_y);
-            }else if(currentState != State.PULL_IN_SLIDES){
+            }else if(currentState != State.PULL_IN_SLIDES && currentState != State.GRAB_CONE){
                 robot.config.intakeDrawerSlideLeft.setPower(0);
                 robot.config.intakeDrawerSlideRight.setPower(0);
             }
@@ -159,7 +227,7 @@ public class EndcoderTesting extends LinearOpMode {
             }else if (gamepad1.right_bumper){
                 robot.config.leftVerticalSlide.setPower(-0.7);
                 robot.config.rightVerticalSlide.setPower(-0.7);
-            }else if(currentState != State.RAISE_VERT && currentState != State.PULL_IN_VERT){
+            }else if(currentState != State.RAISE_VERT && currentState != State.PULL_IN_VERT && currentState != State.MEDIUM_CYCLE && currentState != State.MEDIUM_CYCLE_DOWN){
                 robot.config.leftVerticalSlide.setPower(0);
                 robot.config.rightVerticalSlide.setPower(0);
             }
@@ -176,7 +244,7 @@ public class EndcoderTesting extends LinearOpMode {
                 robot.closeClaw();
             }
             if (gamepad2.right_bumper) {
-                robot.config.claw.setPosition(0.71);
+                robot.slightOpen();
             }
             if (gamepad2.dpad_up) {
                 currentState = State.PULL_IN_SLIDES;
@@ -185,8 +253,11 @@ public class EndcoderTesting extends LinearOpMode {
                 auto = true;
             }
             if(gamepad2.y){
-                robot.config.rightPivot.setPosition(0.5);
-                robot.config.leftPivot.setPosition(0.5);
+                robot.config.rightPivot.setPosition(0.58);
+                robot.config.leftPivot.setPosition(0.42);
+            }
+            if(gamepad1.x){
+                robot.ninetyDegreeArm();
             }
             if(gamepad2.left_trigger != 0){
                 rightServo += 0.01;
@@ -203,8 +274,11 @@ public class EndcoderTesting extends LinearOpMode {
             if(gamepad1.left_trigger != 0){
                 currentState = State.RAISE_VERT;
             }
+            if(gamepad1.right_trigger != 0){
+                currentState = State.MEDIUM_CYCLE;
+            }
             if (gamepad2.dpad_down) {
-                currentState = State.ARM_ONLY;
+                currentState = State.GRAB_CONE;
             }
             if(gamepad1.a){
                 robot.config.alignmentTool.setPosition(0.5);
@@ -223,22 +297,14 @@ public class EndcoderTesting extends LinearOpMode {
                 }
             }
             if(slowDrive){
-                mecanumDrive(robot, 0.5);
+                mecanumDrive(robot, 0.3);
             }else{
                 mecanumDrive(robot, 1);
             }
-            /*
-            robot.setWeightedDrivePower(
-                    new Pose2d(
-                            -gamepad1.left_stick_y,
-                            -gamepad1.left_stick_x,
-                            -gamepad1.right_stick_x
-                    )
-            );
-             */
-            telemetry.addData("front distance", robot.config.distanceSensor.getDistance(DistanceUnit.MM));
-            telemetry.addData("side distance", robot.config.backSensor.getDistance(DistanceUnit.MM));
-            telemetry.addData("back distance", robot.config.sideSensor.getDistance(DistanceUnit.MM));
+            telemetry.addData("front distance: ", robot.config.distanceSensor.getDistance(DistanceUnit.MM));
+            telemetry.addData("back distance: ", robot.config.backSensor.getDistance(DistanceUnit.MM));
+            telemetry.addData("claw color: ", robot.config.clawSensor.red() + " blue: " + robot.config.clawSensor.blue() + " Distance: " + robot.config.clawSensor.getDistance(DistanceUnit.CM));
+            telemetry.addData("magnet: ", robot.config.magnet.isPressed());
             telemetry.addData("rightRear", robot.rightRear.getCurrentPosition());
             telemetry.addData("leftFront", robot.leftFront.getCurrentPosition());
             telemetry.addData("Rightfront", robot.rightFront.getCurrentPosition());

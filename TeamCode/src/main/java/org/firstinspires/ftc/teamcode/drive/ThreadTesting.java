@@ -4,6 +4,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -25,16 +27,25 @@ public class ThreadTesting extends LinearOpMode {
         robot.config.intakeDrawerSlideRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robot.config.intakeDrawerSlideLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.config.intakeDrawerSlideLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        //service = Executors.newFixedThreadPool(4);
-        robot.config.rightPivot.setPosition(0.5);
-        robot.config.leftPivot.setPosition(0.5);
         waitForStart();
 
-        whileLoopScore(0, robot);
-        whileLoopScore(1, robot);
-        whileLoopScore(2, robot);
-        whileLoopScore(3, robot);
-        whileLoopScore(4, robot);
+        while(true){
+            if(gamepad1.a){
+                sensorGrabCone(robot);
+            }
+            if(gamepad1.b){
+                break;
+            }
+        }
+    }
+
+    public void sensorGrabCone(SampleMecanumDrive drive){
+        drive.config.claw.setPosition(0);
+        while(drive.config.clawSensor.red() <= 60){
+            drive.setMotorPowers(0.19, 0.19, -0.19, -0.19);
+        }
+        drive.closeClaw();
+        drive.stop();
     }
 
     public void whileLoopScore(int iter, SampleMecanumDrive drive) { //extend slides to get cone

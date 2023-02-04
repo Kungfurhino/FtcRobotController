@@ -2,10 +2,6 @@ package org.firstinspires.ftc.teamcode.drive;
 
 import android.os.Build;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -14,12 +10,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Recorder.JoystickRecorder;
 import org.firstinspires.ftc.teamcode.detection.DetectionClass;
 import org.firstinspires.ftc.teamcode.detection.DetectionTest;
-import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
 
 import androidx.annotation.RequiresApi;
 
 @Autonomous
-public class OneCycleAuto extends LinearOpMode {
+public class FiveCycleAuto extends LinearOpMode {
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -42,20 +37,21 @@ public class OneCycleAuto extends LinearOpMode {
         drive.rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         drive.rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        JoystickRecorder slowBack = new JoystickRecorder("SlowBack.txt", telemetry);
+        JoystickRecorder slowBack = new JoystickRecorder("SlowBackNew.txt", telemetry);
         slowBack.loadPlayback();
-
+        drive.config.clawSensor.enableLed(false);
         DetectionClass detector;
         DetectionTest.SkystoneDeterminationPipeline.SkystonePosition pos = null;
         long time;
         detector = new DetectionClass(hardwareMap, this);
         detector.init();
 
-        drive.config.alignmentTool.setPosition(0.5);
+        //drive.config.alignmentTool.setPosition(0.5);
+        drive.config.clawSensor.enableLed(true);
         waitForStart();
 
         if (isStopRequested()) return;
-        /*
+
         pos = detector.Detect();
         time = System.currentTimeMillis();
         while(pos == null){
@@ -68,12 +64,12 @@ public class OneCycleAuto extends LinearOpMode {
         }
         telemetry.addData("position", pos.toString());
 
-         */
-
-        slowBack.playSamplesWithTicks(drive, 100000);
+        slowBack.playSamplesWithTicks(drive, 74000);//75000
         drive.rotateRightWithGyro((float)0.3, -70);//62
         drive.setMotorPowers(-0.2, -0.2,-0.2, -0.2);
         sleep(450);
+        drive.setMotorPowers(0,0,0,0);
+        sleep(200);
         drive.strafeWithDistance(200);
         drive.setMotorPowers(0,0,0,0);
         drive.backwardWithDistance(82);
@@ -102,10 +98,10 @@ public class OneCycleAuto extends LinearOpMode {
         drive.config.intakeDrawerSlideRight.setPower(0.05);
         drive.config.leftPivot.setPosition(0.5);
         drive.config.rightPivot.setPosition(0.5);
-        sleep(900);
+        sleep(600);
         while(drive.config.intakeDrawerSlideLeft.getCurrentPosition() > 0){
-            drive.config.intakeDrawerSlideLeft.setPower(-0.6);
-            drive.config.intakeDrawerSlideRight.setPower(-0.6);
+            drive.config.intakeDrawerSlideLeft.setPower(-1);
+            drive.config.intakeDrawerSlideRight.setPower(-1);
         }
         drive.config.intakeDrawerSlideLeft.setPower(0);
         drive.config.intakeDrawerSlideRight.setPower(0);
@@ -116,18 +112,28 @@ public class OneCycleAuto extends LinearOpMode {
         drive.config.leftPivot.setPosition(0.5);
         drive.config.rightPivot.setPosition(0.5);
 
-        whileLoopScore(1, drive);
-        whileLoopScore(2, drive);
-        whileLoopScore(3, drive);
-        whileLoopScore(4, drive);
+        if(whileLoopScore(1, drive) == 1){
+            stop();
+        }
+        if(whileLoopScore(2, drive) == 1){
+            stop();
+        }
+        if(whileLoopScore(3, drive) == 1){
+            stop();
+        }
+        if(whileLoopScore(4, drive) == 1){
+            stop();
+        }
+        getoff(drive);
         scorecone(drive);
+        sleep(300);
         pullverticalslides(drive);
         sleep(500);
 
         drive.rotateRightWithGyro((float) 0.5, -81);//rotate back to perpendicular
         drive.rightRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         drive.rightRear.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        while(drive.rightRear.getCurrentPosition() < 10000){//strafe left
+        while(drive.rightRear.getCurrentPosition() < 12000){//strafe left
             drive.setMotorPowers(-0.4, 0.4, -0.4, 0.4);
             telemetry.addData("strafe: ", drive.rightRear.getCurrentPosition());
             telemetry.update();
@@ -156,8 +162,8 @@ public class OneCycleAuto extends LinearOpMode {
     public void pullverticalslides(SampleMecanumDrive drive) { //pull vertical slides in
         sleep(100);
         while(drive.config.leftVerticalSlide.getCurrentPosition() >= 0){
-            drive.config.leftVerticalSlide.setPower(-0.6); //pull in
-            drive.config.rightVerticalSlide.setPower(-0.6);
+            drive.config.leftVerticalSlide.setPower(-1); //pull in
+            drive.config.rightVerticalSlide.setPower(-1);
         }
         drive.config.leftVerticalSlide.setPower(0);
         drive.config.rightVerticalSlide.setPower(0);
@@ -184,7 +190,7 @@ public class OneCycleAuto extends LinearOpMode {
     public void sensorGrabCone(SampleMecanumDrive drive){
         drive.rightRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         drive.rightRear.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        while(drive.config.clawSensor.red() <= 60 && drive.config.clawSensor.blue() <= 60 && drive.rightRear.getCurrentPosition() >= -1930){
+        while(drive.config.clawSensor.red() <= 60 && drive.config.clawSensor.blue() <= 60 && drive.rightRear.getCurrentPosition() >= -1800){
             drive.setMotorPowers(0.3, -0.3, 0.3, -0.3);
         }
         drive.stop();
@@ -196,11 +202,11 @@ public class OneCycleAuto extends LinearOpMode {
         boolean vert = false;
         drive.config.leftPivot.setPosition(0.7);
         drive.config.rightPivot.setPosition(0.3);
-        sleep(900);
-        drive.config.intakeDrawerSlideLeft.setPower(0.5);
-        drive.config.intakeDrawerSlideRight.setPower(0.5);
+        sleep(700);
+        drive.config.intakeDrawerSlideLeft.setPower(0.8);
+        drive.config.intakeDrawerSlideRight.setPower(0.8);
         drive.config.claw.setPosition(0);
-        sleep(400);
+        sleep(300);
         drive.config.leftVerticalSlide.setPower(1);
         drive.config.rightVerticalSlide.setPower(1);
         while(true){
@@ -215,7 +221,7 @@ public class OneCycleAuto extends LinearOpMode {
                 drive.config.rightVerticalSlide.setPower(-1);
                 vert = true;
             }
-            if(drive.config.clawSensor.getDistance(DistanceUnit.CM) <= 1.9 || drive.config.intakeDrawerSlideLeft.getCurrentPosition() >= 1150 || drive.config.intakeDrawerSlideRight.getCurrentPosition() >= 1150){
+            if(drive.config.clawSensor.getDistance(DistanceUnit.CM) <= 1.9 || drive.config.intakeDrawerSlideLeft.getCurrentPosition() >= 1075 || drive.config.intakeDrawerSlideRight.getCurrentPosition() >= 1075){
                 drive.config.intakeDrawerSlideLeft.setPower(0);
                 drive.config.intakeDrawerSlideRight.setPower(0);
                 extension = true;
@@ -228,7 +234,7 @@ public class OneCycleAuto extends LinearOpMode {
         }
     }
 
-    public void whileLoopScore(int iter, SampleMecanumDrive drive) { //extend slides to get cone
+    public int whileLoopScore(int iter, SampleMecanumDrive drive) { //extend slides to get cone
         double angleLeft = 0;
         double angleRight = 0;
         boolean horizontal = false;
@@ -238,6 +244,8 @@ public class OneCycleAuto extends LinearOpMode {
         boolean peak = false;
         boolean grab = true;
         boolean upPos = false;
+        boolean fastHorizontal = false;
+        boolean slowed = true;
         long currentTime = 0;
         long currentTimeVert = 0;
         long currentTimeDeposit;
@@ -287,8 +295,11 @@ public class OneCycleAuto extends LinearOpMode {
                 drive.config.intakeDrawerSlideRight.setPower(0);
                 break;
             }
+            if(Float.parseFloat(drive.getPitchAngle()) > 5 || Float.parseFloat(drive.getRollAngle()) > 5){
+                return 1;
+            }
             if(gamepad2.left_bumper){
-                return;
+                return 1;
             }
             if (drive.config.leftVerticalSlide.getCurrentPosition() >= 2270 && height && !peak) {//Pull down vertical sides
                 drive.config.leftVerticalSlide.setPower(0);
@@ -307,13 +318,16 @@ public class OneCycleAuto extends LinearOpMode {
                 drive.config.rightVerticalSlide.setPower(0);
                 vertical = true;
             }
-            if(grab && (drive.config.intakeDrawerSlideLeft.getCurrentPosition() >= ticks || drive.config.intakeDrawerSlideRight.getCurrentPosition() >= ticks)){
+            if(grab && (drive.config.intakeDrawerSlideLeft.getCurrentPosition() >= ticks - 50 || drive.config.intakeDrawerSlideRight.getCurrentPosition() >= ticks - 50)){
                 drive.config.intakeDrawerSlideLeft.setPower(0); //stop extending
                 drive.config.intakeDrawerSlideRight.setPower(0);
                 grab = false;
                 upPos = true;
             }
-            if(!horizontalFinal && (upPos && drive.config.leftVerticalSlide.getCurrentPosition() <= 1000) && (drive.config.intakeDrawerSlideLeft.getCurrentPosition() >= ticks || drive.config.intakeDrawerSlideRight.getCurrentPosition() >= ticks)) {//Extend horizontal slides until it reaches the cone
+            if(!horizontalFinal && (upPos && drive.config.leftVerticalSlide.getCurrentPosition() <= 1000) && (drive.config.intakeDrawerSlideLeft.getCurrentPosition() >= ticks - 50 || drive.config.intakeDrawerSlideRight.getCurrentPosition() >= ticks - 50)) {//Extend horizontal slides until it reaches the cone
+                drive.config.intakeDrawerSlideRight.setPower(0.4);
+                drive.config.intakeDrawerSlideRight.setPower(0.4);
+                sleep(300);
                 drive.config.intakeDrawerSlideLeft.setPower(0); //stop extending
                 drive.config.intakeDrawerSlideRight.setPower(0);
                 drive.closeClaw(); //close the claw to grab cone
@@ -323,20 +337,22 @@ public class OneCycleAuto extends LinearOpMode {
                 drive.config.rightPivot.setPosition(0.5);
                 drive.config.leftPivot.setPosition(0.5);
                 sleep(250);
-                drive.config.intakeDrawerSlideLeft.setPower(-0.45); //start retracting
-                drive.config.intakeDrawerSlideRight.setPower(-0.45);
+                drive.config.intakeDrawerSlideLeft.setPower(-1); //start retracting
+                drive.config.intakeDrawerSlideRight.setPower(-1);
                 horizontalFinal = true;
             }
-
-            if (horizontalFinal && drive.config.intakeDrawerSlideLeft.getCurrentPosition() <= 0){
+            if((slowed && horizontalFinal) && drive.config.intakeDrawerSlideLeft.getCurrentPosition() <= 100){
+                drive.config.intakeDrawerSlideLeft.setPower(-0.4); //start retracting
+                drive.config.intakeDrawerSlideRight.setPower(-0.4);
+                fastHorizontal = true;
+                slowed = false;
+            }
+            if(fastHorizontal && drive.config.intakeDrawerSlideLeft.getCurrentPosition() <= 0){
                 if(vertical){
                     drive.armUp();
                     sleep(500);
                     drive.slightOpen();
                     sleep(250);
-                    drive.config.rightPivot.setPosition(0.5);
-                    drive.config.leftPivot.setPosition(0.5);
-                    sleep(500);
                     horizontal = true;
                 }
             }
@@ -346,6 +362,7 @@ public class OneCycleAuto extends LinearOpMode {
             telemetry.addData("horizontal slides", "left slide" + drive.config.intakeDrawerSlideLeft.getCurrentPosition() + ", Right slide" + drive.config.intakeDrawerSlideRight.getCurrentPosition());
             telemetry.update();
         }
+        return 0;
     }
 
 }
